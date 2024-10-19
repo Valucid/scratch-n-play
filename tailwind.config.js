@@ -17,6 +17,9 @@ export default {
         gray2: "#A0AFC0",
         light: "#FAFAFA"
       },
+      backgroundImage: {
+        'gradient-to-b': 'linear-gradient(180deg, #D6EDFF 0%, #630A0D 4%, #CC9C02 100%)'
+      }
     },
   },
   plugins: [],

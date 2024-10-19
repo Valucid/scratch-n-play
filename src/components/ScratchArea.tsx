@@ -1,89 +1,100 @@
-import React, { useRef, useEffect, useState, useCallback } from "react";
+import React, { useRef, useEffect, useState, MouseEvent } from "react";
 
-const ScratchCard = ({ width, height, image, brushSize, prize }) => {
-  const canvasRef = useRef(null);
+// Define an interface for the component props
+interface ScratchCardProps {
+  width: number;
+  height: number;
+  image: string;
+  brushSize: number;
+  prize: string;
+}
+
+const ScratchCard: React.FC<ScratchCardProps> = ({ width, height, image, brushSize, prize }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [scratchedPercent, setScratchedPercent] = useState(0);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
-
-    // Draw the prize first as the background layer
-    context.clearRect(0, 0, width, height); // Clear any previous drawing
-    context.fillStyle = "black";
-    context.fillRect(0, 0, width, height); // Set a black background
-
-    context.fillStyle = "white"; // Set the prize text color
-    context.font = "bold 40px Arial"; // Prize text font
-    context.textAlign = "center"; // Center align text
-    context.textBaseline = "middle"; // Center vertically
-    context.fillText(prize, width / 2, height / 2); // Place the prize in the center
-
-    // Load and draw the scratchable image on top
-    const img = new Image();
-    img.src = image;
-    img.crossOrigin = "anonymous"; // Avoid cross-origin issues
-    img.onload = () => {
-      context.globalCompositeOperation = "source-over"; // Draw image normally
-      context.drawImage(img, 0, 0, width, height); // Draw the image that will be scratched off
-      context.globalCompositeOperation = "destination-out"; // Set to "erase" mode for scratching
-    };
-  }, [width, height, prize, image]);
-
-  const handleMouseDown = () => {
-    setIsMouseDown(true);
-  };
-
-  const handleMouseUp = () => {
-    setIsMouseDown(false);
-    calculateScratchedPercent();
-  };
-
-  const calculateScratchedPercent = useCallback(() => {
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
-    const pixels = context.getImageData(0, 0, width, height).data;
-    const totalPixels = width * height;
-    let scratchedPixels = 0;
-
-    for (let i = 0; i < pixels.length; i += 4) {
-      if (pixels[i + 3] === 0) {
-        scratchedPixels++;
+    if (canvasRef.current) {
+      const context = canvasRef.current.getContext('2d');
+      if (context) {
+        const topLayer = new Image();
+        topLayer.crossOrigin = "Anonymous";
+        topLayer.src = image;
+        topLayer.onload = () => {
+          context.drawImage(topLayer, 0, 0, width, height);
+        };
       }
     }
+  }, [image, width, height]);
 
-    const percent = (scratchedPixels / totalPixels) * 100;
-    setScratchedPercent(percent);
-  }, [width, height]);
+  const calculateScratchedPercent = () => {
+    if (canvasRef.current) {
+      const context = canvasRef.current.getContext('2d');
+      if (context) {
+        const imageData = context.getImageData(0, 0, width, height).data;
+        let scratched = 0;
+        for (let i = 0; i < imageData.length; i += 4) {
+          if (imageData[i + 3] === 0) { // Check alpha channel transparency
+            scratched++;
+          }
+        }
+        const total = (width * height);
+        setScratchedPercent((scratched / total) * 100);
+      }
+    }
+  };
 
-  const scratch = (e) => {
-    if (!isMouseDown) return;
-
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    // Scratch away the area to reveal the prize beneath
-    context.beginPath();
-    context.arc(x, y, brushSize, 0, Math.PI * 2, true);
-    context.fill();
+  const scratch = (event: MouseEvent) => {
+    if (!isMouseDown || !canvasRef.current) return;
+    
+    const ctx = canvasRef.current.getContext('2d');
+    if (ctx) {
+      const rect = canvasRef.current.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.beginPath();
+      ctx.arc(x, y, brushSize, 0, Math.PI * 2);
+      ctx.fill();
+      calculateScratchedPercent();
+    }
   };
 
   return (
-    <div className="scratch-card">
+    <div className="scratch-card" style={{ position: 'relative', width, height }}>
+      <div
+        style={{
+          position: 'absolute',
+          width: '100%',
+          height: '100%',
+          textAlign: 'center',
+          lineHeight: `${height}px`,
+          fontSize: '24px',
+          fontWeight: '700',
+          color: 'black',
+          userSelect: 'none',
+        }}
+      >
+        {prize}
+      </div>
       <canvas
         ref={canvasRef}
         width={width}
         height={height}
-        onMouseDown={handleMouseDown}
+        onMouseDown={() => setIsMouseDown(true)}
+        onMouseUp={() => setIsMouseDown(false)}
+        onMouseOut={() => setIsMouseDown(false)}
         onMouseMove={scratch}
-        onMouseUp={handleMouseUp}
-        style={{ cursor: "pointer", border: "2px solid #ccc" }}
+        style={{
+          cursor: 'crosshair',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          border: '1px solid #000',
+          borderRadius: 10
+        }}
       />
-      <p>{scratchedPercent.toFixed(2)}% scratched</p>
     </div>
   );
 };
