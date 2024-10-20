@@ -29,14 +29,14 @@ const ScratchGame: React.FC = () => {
     <div className="">
       <header className="text-light mx-1 rounded-[20px] bg-[url(/images/header-bg.svg)] bg-bottom bg-no-repeat bg-cover py-8">
         <div className="container mx-auto relative">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl w-2/5">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl w-2/5 max-md:px-4">
             Scratch, Win, and Celebrate!
           </h1>
         </div>
       </header>
 
       <div className="container mx-auto flex flex-col sm:flex-row justify-evenly mt-5 gap-5">
-        <div className="w-full md:w-4/5 rounded-[20px] py-4 scratch-bg">
+        <div className="w-full md:w-4/5 rounded-[20px] py-4 scratch-bg max-md:px-4">
           <p className="text-light font-bold text-center font-anaheim tracking-wide">
             Match 3 Identical prize amount to win NGN5000.
           </p>
