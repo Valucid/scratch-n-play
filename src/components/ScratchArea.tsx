@@ -1,4 +1,10 @@
-import React, { useRef, useEffect, useState, MouseEvent } from "react";
+import React, {
+  useRef,
+  useLayoutEffect,
+  useState,
+  MouseEvent,
+  TouchEvent,
+} from "react";
 
 interface ScratchCardProps {
   image: string;
@@ -14,29 +20,31 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
   isRevealed,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isMouseDown, setIsMouseDown] = useState(false);
+  const [isDrawing, setIsDrawing] = useState(false);
 
   // Function to draw the scratch image
   const drawScratchImage = () => {
-    if (canvasRef.current) {
-      const canvas = canvasRef.current;
+    const canvas = canvasRef.current;
+    if (canvas) {
       const context = canvas.getContext("2d");
       if (context) {
         const { width, height } = canvas;
         const topLayer = new Image();
-        topLayer.crossOrigin = "Anonymous";
         topLayer.src = image;
         topLayer.onload = () => {
           context.drawImage(topLayer, 0, 0, width, height);
+        };
+        topLayer.onerror = () => {
+          console.error("Failed to load image:", image);
         };
       }
     }
   };
 
-  // Effect to handle initial render and when `isRevealed` changes
-  useEffect(() => {
-    if (canvasRef.current) {
-      const canvas = canvasRef.current;
+  // Use useLayoutEffect to ensure dimensions are set after DOM mutations
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
       const context = canvas.getContext("2d");
       if (context) {
         // Set canvas dimensions to match CSS size
@@ -53,8 +61,9 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
     }
   }, [image, isRevealed]);
 
+  // Scratch function for mouse events
   const scratch = (event: MouseEvent<HTMLCanvasElement>) => {
-    if (isRevealed || !isMouseDown || !canvasRef.current) return;
+    if (isRevealed || !isDrawing || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
@@ -64,6 +73,29 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
       const scaleY = canvas.height / rect.height;
       const x = (event.clientX - rect.left) * scaleX;
       const y = (event.clientY - rect.top) * scaleY;
+
+      context.globalCompositeOperation = "destination-out";
+      context.beginPath();
+      context.arc(x, y, brushSize, 0, Math.PI * 2);
+      context.fill();
+    }
+  };
+
+  // Scratch function for touch events
+  const scratchTouch = (event: TouchEvent<HTMLCanvasElement>) => {
+    if (isRevealed || !canvasRef.current) return;
+
+    event.preventDefault(); // Prevent scrolling while scratching
+
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+    if (context) {
+      const rect = canvas.getBoundingClientRect();
+      const touch = event.touches[0];
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (touch.clientX - rect.left) * scaleX;
+      const y = (touch.clientY - rect.top) * scaleY;
 
       context.globalCompositeOperation = "destination-out";
       context.beginPath();
@@ -82,10 +114,14 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
       <canvas
         ref={canvasRef}
         className="absolute inset-0 w-full h-full"
-        onMouseDown={() => setIsMouseDown(true)}
-        onMouseUp={() => setIsMouseDown(false)}
-        onMouseOut={() => setIsMouseDown(false)}
+        onMouseDown={() => setIsDrawing(true)}
+        onMouseUp={() => setIsDrawing(false)}
+        onMouseOut={() => setIsDrawing(false)}
         onMouseMove={scratch}
+        onTouchStart={() => setIsDrawing(true)}
+        onTouchEnd={() => setIsDrawing(false)}
+        onTouchCancel={() => setIsDrawing(false)}
+        onTouchMove={scratchTouch}
         style={{
           cursor: isRevealed ? "default" : "crosshair",
         }}
