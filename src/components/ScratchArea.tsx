@@ -1,18 +1,13 @@
 import React, { useRef, useEffect, useState, MouseEvent } from "react";
 
-// Define an interface for the component props
 interface ScratchCardProps {
-  width: number;
-  height: number;
   image: string;
   brushSize: number;
   prize: string;
-  isRevealed: boolean; // New prop to control reveal
+  isRevealed: boolean;
 }
 
 const ScratchCard: React.FC<ScratchCardProps> = ({
-  width,
-  height,
   image,
   brushSize,
   prize,
@@ -24,8 +19,10 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
   // Function to draw the scratch image
   const drawScratchImage = () => {
     if (canvasRef.current) {
-      const context = canvasRef.current.getContext("2d");
+      const canvas = canvasRef.current;
+      const context = canvas.getContext("2d");
       if (context) {
+        const { width, height } = canvas;
         const topLayer = new Image();
         topLayer.crossOrigin = "Anonymous";
         topLayer.src = image;
@@ -38,76 +35,59 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
 
   // Effect to handle initial render and when `isRevealed` changes
   useEffect(() => {
-    if (isRevealed) {
-      // Reveal the prize by clearing the canvas
-      if (canvasRef.current) {
-        const context = canvasRef.current.getContext("2d");
-        if (context) {
-          context.clearRect(0, 0, width, height);
+    if (canvasRef.current) {
+      const canvas = canvasRef.current;
+      const context = canvas.getContext("2d");
+      if (context) {
+        // Set canvas dimensions to match CSS size
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+
+        if (isRevealed) {
+          // Reveal the prize by clearing the canvas
+          context.clearRect(0, 0, canvas.width, canvas.height);
+        } else {
+          drawScratchImage();
         }
       }
-    } else {
-      // Draw the scratch image
-      drawScratchImage();
     }
-  }, [isRevealed, image, width, height]);
+  }, [image, isRevealed]);
 
-  // Scratch function to erase parts of the scratch image
-  const scratch = (event: MouseEvent) => {
+  const scratch = (event: MouseEvent<HTMLCanvasElement>) => {
     if (isRevealed || !isMouseDown || !canvasRef.current) return;
 
-    const ctx = canvasRef.current.getContext("2d");
-    if (ctx) {
-      const rect = canvasRef.current.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      ctx.globalCompositeOperation = "destination-out";
-      ctx.beginPath();
-      ctx.arc(x, y, brushSize, 0, Math.PI * 2);
-      ctx.fill();
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+    if (context) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (event.clientX - rect.left) * scaleX;
+      const y = (event.clientY - rect.top) * scaleY;
+
+      context.globalCompositeOperation = "destination-out";
+      context.beginPath();
+      context.arc(x, y, brushSize, 0, Math.PI * 2);
+      context.fill();
     }
   };
 
   return (
-    <div
-      className="scratch-card"
-      style={{ position: "relative", width, height }}
-    >
+    <div className="relative w-full h-full">
       {/* Prize text */}
-      <div
-        style={{
-          position: "absolute",
-          width: "100%",
-          height: "100%",
-          textAlign: "center",
-          lineHeight: `${height}px`,
-          fontSize: "24px",
-          fontWeight: "700",
-          color: "black",
-          userSelect: "none",
-          backgroundColor: "#C4C4C4",
-          borderRadius: 10,
-        }}
-      >
+      <div className="absolute inset-0 flex items-center justify-center text-black font-bold bg-[#C4C4C4] rounded-[10px]">
         {prize}
       </div>
-
-      {/* Canvas with the scratchable image */}
+      {/* Canvas */}
       <canvas
         ref={canvasRef}
-        width={width}
-        height={height}
+        className="absolute inset-0 w-full h-full"
         onMouseDown={() => setIsMouseDown(true)}
         onMouseUp={() => setIsMouseDown(false)}
         onMouseOut={() => setIsMouseDown(false)}
         onMouseMove={scratch}
         style={{
           cursor: isRevealed ? "default" : "crosshair",
-          position: "absolute",
-          top: 0,
-          left: 0,
-          border: "1px solid #000",
-          borderRadius: 10,
         }}
       />
     </div>

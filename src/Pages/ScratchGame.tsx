@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import WinnerList from "../components/WinnersList";
-import ScratchCard from "../components/ScratchArea"; // Ensure the correct path
+import ScratchCard from "../components/ScratchArea";
 
 const ScratchGame: React.FC = () => {
   const initialPrizes = [
@@ -16,7 +16,7 @@ const ScratchGame: React.FC = () => {
   ];
   const [prizes, setPrizes] = useState(initialPrizes);
   const [isRevealed, setIsRevealed] = useState(false);
-  const scratchCardSize = 200;
+  //const scratchCardSize = 100;
 
   // Function to reset the game
   const resetGame = () => {
@@ -41,17 +41,19 @@ const ScratchGame: React.FC = () => {
             Match 3 Identical prize amount to win NGN5000.
           </p>
           <div className="">
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 max-w-[701px] mx-auto bg-gradient-to-b  px-5 py-4 rounded-[28px] place-items-center">
+            <div className="grid grid-cols-3 gap-4  max-w-[701px] mx-auto bg-gradient-to-b  px-5 py-4 rounded-[28px] place-items-center">
+
               {prizes.map((prize, index) => (
-                <ScratchCard
-                  key={index}
-                  width={scratchCardSize}
-                  height={scratchCardSize}
-                  image="/images/glitters.svg" // Ensure this path is correct
-                  brushSize={15}
-                  prize={prize}
-                  isRevealed={isRevealed}
-                />
+                <div  key={index}
+                className="w-[100px] h-[100px] md:w-[200px] md:h-[200px]">
+                  <ScratchCard
+                    key={index}
+                    image="/images/glitters.svg"
+                    brushSize={15}
+                    prize={prize}
+                    isRevealed={isRevealed}
+                  />
+                </div>
               ))}
             </div>
           </div>
@@ -69,7 +71,7 @@ const ScratchGame: React.FC = () => {
                 setIsRevealed(true); // Reveal the prizes
               }
             }}
-            className="bg-[#87131B] text-light py-3 px-8 mt-8 text-sm md:text-base font-semibold rounded-lg flex self-center justify-center"
+            className="bg-[#87131B] w-max mx-auto text-light py-3 px-8 my-8 text-sm md:text-base font-semibold rounded-lg flex self-center justify-center"
           >
             {isRevealed ? "Play Again" : "Reveal Prizes"}
           </button>
