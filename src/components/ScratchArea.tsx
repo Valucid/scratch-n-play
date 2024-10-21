@@ -11,6 +11,7 @@ interface ScratchCardProps {
   brushSize: number;
   prize: string;
   isRevealed: boolean;
+  onReveal: (prize: string) => void;
 }
 
 const ScratchCard: React.FC<ScratchCardProps> = ({
@@ -18,9 +19,11 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
   brushSize,
   prize,
   isRevealed,
+  onReveal,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [hasBeenRevealed, setHasBeenRevealed] = useState(false);
 
   // Function to draw the scratch image
   const drawScratchImage = () => {
@@ -54,12 +57,51 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
         if (isRevealed) {
           // Reveal the prize by clearing the canvas
           context.clearRect(0, 0, canvas.width, canvas.height);
+          if (!hasBeenRevealed) {
+            setHasBeenRevealed(true);
+            onReveal(prize);
+          }
         } else {
           drawScratchImage();
+          setHasBeenRevealed(false);
         }
       }
     }
   }, [image, isRevealed]);
+
+  // Function to calculate scratch percentage
+  const calculateScratchPercentage = () => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const context = canvas.getContext("2d");
+      if (context) {
+        const imageData = context.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+        const pixels = imageData.data;
+        const totalPixels = pixels.length / 4;
+        let transparentPixels = 0;
+
+        for (let i = 3; i < pixels.length; i += 4) {
+          if (pixels[i] === 0) {
+            transparentPixels++;
+          }
+        }
+
+        const percent = (transparentPixels / totalPixels) * 100;
+
+        // Reveal the prize if scratch percentage is >= 50%
+        if (percent >= 50 && !hasBeenRevealed) {
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          setHasBeenRevealed(true);
+          onReveal(prize);
+        }
+      }
+    }
+  };
 
   // Scratch function for mouse events
   const scratch = (event: MouseEvent<HTMLCanvasElement>) => {
@@ -78,6 +120,8 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
       context.beginPath();
       context.arc(x, y, brushSize, 0, Math.PI * 2);
       context.fill();
+
+      calculateScratchPercentage();
     }
   };
 
@@ -101,6 +145,8 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
       context.beginPath();
       context.arc(x, y, brushSize, 0, Math.PI * 2);
       context.fill();
+
+      calculateScratchPercentage();
     }
   };
 
