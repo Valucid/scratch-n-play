@@ -130,16 +130,16 @@ const ScratchGame: React.FC = () => {
         <Confetti width={width} height={height} recycle={false} />
       )}
 
-      <header className="text-light mx-1 rounded-[20px] bg-[url(/images/header-bg.svg)] bg-bottom bg-no-repeat bg-cover py-8">
+      {/* <header className="text-light mx-1 rounded-[20px] bg-[url(/images/header-bg.svg)] bg-bottom bg-no-repeat bg-cover py-8">
         <div className="container mx-auto relative">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl w-2/5 max-md:px-4">
+          <h1 className="text-4xl w-4/5 max-md:px-4">
             Scratch, Win, and Celebrate!
           </h1>
         </div>
-      </header>
+      </header> */}
 
       <div
-        className="container mx-auto flex flex-col sm:flex-row justify-evenly mt-5 gap-5 relative"
+        className="container mx-auto flex flex-col md:flex-row justify-evenly mt-5 gap-5 relative"
         ref={containerRef}
       >
         <div className="w-full md:w-4/5 rounded-[20px] py-4 scratch-bg max-md:px-4 relative">
@@ -147,11 +147,11 @@ const ScratchGame: React.FC = () => {
             Match 3 identical prize amounts to win.
           </p>
           <div>
-            <div className="grid grid-cols-3 gap-4 max-w-[701px] mx-auto bg-gradient-to-b px-5 py-4 rounded-[28px] place-items-center">
+            <div className="grid grid-cols-3 gap-2 max-w-[701px] mx-auto bg-gradient-to-b px-5 py-4 rounded-[28px] place-items-center">
               {prizes.map((prize, index) => (
                 <div
                   key={`${gameId}-${index}`}
-                  className="w-[100px] h-[100px] md:w-[200px] md:h-[200px]"
+                  className="w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] lg:w-[200px] lg:h-[200px]"
                 >
                   <ScratchCard
                     image="/images/glitters.svg"
@@ -187,7 +187,7 @@ const ScratchGame: React.FC = () => {
                 setIsRevealed(true); // Reveal the prizes
               }
             }}
-            className="bg-[#87131B] w-max mx-auto text-light py-3 px-8 my-8 text-sm md:text-base font-semibold rounded-lg flex self-center justify-center"
+            className="bg-[#87131B] w-max mx-auto text-light py-3 px-8 text-sm my-2 mb-4 md:text-base font-semibold rounded-lg flex self-center justify-center"
           >
             {gameEnded ? "Play Again" : "Reveal Prizes"}
           </button>
