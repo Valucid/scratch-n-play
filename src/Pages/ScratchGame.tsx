@@ -7,7 +7,7 @@ import { useWindowSize } from "react-use";
 const ScratchGame: React.FC = () => {
   const generateRandomPrizes = () => {
     const possiblePrizes = [100, 200, 500, 1000, 2000, 5000];
-    const isWinningGame = Math.random() < 0.5; // 50% chance to be a winning game
+    const isWinningGame = Math.random() < 0.1; // 10% chance to be a winning game
     const prizeCounts: { [key: string]: number } = {};
   
     const prizes: string[] = [];
