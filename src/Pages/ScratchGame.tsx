@@ -11,9 +11,10 @@ const ScratchGame: React.FC = () => {
     const prizeCounts: { [key: string]: number } = {};
   
     const prizes: string[] = [];
-  
+
     if (isWinningGame) {
-      // Winning game logic
+      // Winning game logic (COMMENTED OUT to prevent winning)
+      /*
       const winningPrizeIndex = Math.floor(Math.random() * possiblePrizes.length);
       const winningPrize = possiblePrizes[winningPrizeIndex];
   
@@ -22,7 +23,7 @@ const ScratchGame: React.FC = () => {
         prizes.push(`₦${winningPrize}`);
         prizeCounts[winningPrize] = (prizeCounts[winningPrize] || 0) + 1;
       }
-
+  
       // Add six more prizes
       while (prizes.length < 9) {
         const randomIndex = Math.floor(Math.random() * possiblePrizes.length);
@@ -30,8 +31,9 @@ const ScratchGame: React.FC = () => {
         prizes.push(`₦${prize}`);
         prizeCounts[prize] = (prizeCounts[prize] || 0) + 1;
       }
+      */
     } else {
-      // Losing game logic
+      // Losing game logic (COMMENTED OUT to prevent winning)
       while (prizes.length < 9) {
         const randomIndex = Math.floor(Math.random() * possiblePrizes.length);
         const prize = possiblePrizes[randomIndex];
@@ -73,7 +75,8 @@ const ScratchGame: React.FC = () => {
         prizeCounts[p] = (prizeCounts[p] || 0) + 1;
       });
 
-      // Check if any prize count reaches 3
+      // Check if any prize count reaches 3 (COMMENTED OUT to prevent winning)
+      /*
       let hasWon = false;
       let winningPrizeValue = null;
       for (const [prizeValue, count] of Object.entries(prizeCounts)) {
@@ -90,6 +93,13 @@ const ScratchGame: React.FC = () => {
         setGameEnded(true);
       } else if (newRevealedPrizes.length === prizes.length && !gameEnded) {
         // All cards are revealed and the player hasn't won
+        setMessage("Try again!");
+        setGameEnded(true);
+      }
+      */
+      
+      // Remove winning condition temporarily, just proceed when all prizes are revealed
+      if (newRevealedPrizes.length === prizes.length && !gameEnded) {
         setMessage("Try again!");
         setGameEnded(true);
       }
