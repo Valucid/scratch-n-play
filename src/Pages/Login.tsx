@@ -62,7 +62,7 @@ const Login: React.FC = () => {
 
 
     const handleSubscribe = () => {
-        window.location.href = 'sms:20444?body=PLAY';
+        window.location.href = 'sms:20444?body=SP';
         setShowSubscriptionModal(false)
     };
 
