@@ -3,27 +3,85 @@ import WinnerList from "../components/WinnersList";
 import ScratchCard from "../components/ScratchArea";
 import Confetti from "react-confetti";
 import { useWindowSize } from "react-use";
+import axios from "axios";
+
+// API call to fetch the number of scratches a user has
+const fetchUserScratches = async () => {
+  const token = sessionStorage.getItem("token");
+  const msisdn = sessionStorage.getItem("msisdn");
+
+  if (!token || !msisdn) {
+    // Handle invalid session
+    return -1;
+  }
+
+  try {
+    const response = await axios.get(
+      `https://api.valucid.com/api/v1/users/${msisdn}/check-scratch`,
+      {
+        headers: {
+          "x-auth-token": token,
+        },
+      }
+    );
+    const data = response.data as { scratchValue: number };
+    return data.scratchValue;
+  } catch (error) {
+    console.error("Error fetching user scratches:", error);
+    return -1;
+  }
+};
+
+// API call to fetch the winning prize
+const fetchWinningPrize = async () => {
+  const token = sessionStorage.getItem("token");
+  const msisdn = sessionStorage.getItem("msisdn");
+
+  if (!token || !msisdn) {
+    // Handle invalid session
+    return null;
+  }
+
+  try {
+    const response = await axios.get(
+      `https://api.valucid.com/api/v1/users/${msisdn}/play`,
+      {
+        headers: {
+          "x-auth-token": token,
+        },
+      }
+    );
+
+    if (response.data.status === 400) {
+      return null;
+    } else if (response.data.status === 200 && response.data.prize.length > 0) {
+      const prizeDetails = response.data.prize[0];
+      return prizeDetails.prizeValue;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error("Error fetching winning prize:", error);
+    return null;
+  }
+};
 
 const ScratchGame: React.FC = () => {
-  const generateRandomPrizes = () => {
+  const generateRandomPrizes = async () => {
     const possiblePrizes = [100, 200, 500, 1000, 2000, 5000];
-    const isWinningGame = Math.random() < 0.1; // 10% chance to be a winning game
     const prizeCounts: { [key: string]: number } = {};
-  
     const prizes: string[] = [];
 
-    if (isWinningGame) {
-      // Winning game logic (COMMENTED OUT to prevent winning)
-      /*
-      const winningPrizeIndex = Math.floor(Math.random() * possiblePrizes.length);
-      const winningPrize = possiblePrizes[winningPrizeIndex];
-  
-      // Add three instances of the winning prize
+    const winningPrize = await fetchWinningPrize();
+
+    if (winningPrize) {
+      // Winning game logic
+      // Add the winning prize three times to the prizes array
       for (let i = 0; i < 3; i++) {
         prizes.push(`₦${winningPrize}`);
         prizeCounts[winningPrize] = (prizeCounts[winningPrize] || 0) + 1;
       }
-  
+
       // Add six more prizes
       while (prizes.length < 9) {
         const randomIndex = Math.floor(Math.random() * possiblePrizes.length);
@@ -31,14 +89,13 @@ const ScratchGame: React.FC = () => {
         prizes.push(`₦${prize}`);
         prizeCounts[prize] = (prizeCounts[prize] || 0) + 1;
       }
-      */
     } else {
-      // Losing game logic (COMMENTED OUT to prevent winning)
+      // Losing game logic
       while (prizes.length < 9) {
         const randomIndex = Math.floor(Math.random() * possiblePrizes.length);
         const prize = possiblePrizes[randomIndex];
         const count = prizeCounts[prize] || 0;
-  
+
         if (count < 2) {
           prizes.push(`₦${prize}`);
           prizeCounts[prize] = count + 1;
@@ -48,11 +105,11 @@ const ScratchGame: React.FC = () => {
 
     // Shuffle the prizes array
     prizes.sort(() => Math.random() - 0.5);
-  
+
     return prizes;
   };
 
-  const [prizes, setPrizes] = useState(generateRandomPrizes());
+  const [prizes, setPrizes] = useState<string[]>([]);
   const [isRevealed, setIsRevealed] = useState(false);
   const [revealedPrizes, setRevealedPrizes] = useState<string[]>([]);
   const [winningPrize, setWinningPrize] = useState<string | null>(null);
@@ -61,13 +118,32 @@ const ScratchGame: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [gameId, setGameId] = useState(0);
+  const [userScratches, setUserScratches] = useState<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const { width, height } = useWindowSize();
+
+  useEffect(() => {
+    const initializeGame = async () => {
+      const scratches = await fetchUserScratches();
+      setUserScratches(scratches);
+      if (scratches > 0) {
+        const generatedPrizes = await generateRandomPrizes();
+        setPrizes(generatedPrizes);
+      } else {
+        setMessage(
+          "You have 0 scratches left! To scratch more, text PLAY to 20444."
+        );
+        setShowModal(true);
+      }
+    };
+
+    initializeGame();
+  }, [gameId]);
 
   const handleReveal = (prize: string) => {
     setRevealedPrizes((prevRevealedPrizes) => {
       const newRevealedPrizes = [...prevRevealedPrizes, prize];
-      console.log(revealedPrizes)
+      console.log(revealedPrizes);
 
       // Count occurrences of each prize
       const prizeCounts: { [key: string]: number } = {};
@@ -75,8 +151,7 @@ const ScratchGame: React.FC = () => {
         prizeCounts[p] = (prizeCounts[p] || 0) + 1;
       });
 
-      // Check if any prize count reaches 3 (COMMENTED OUT to prevent winning)
-      /*
+      // Check if any prize count reaches 3
       let hasWon = false;
       let winningPrizeValue = null;
       for (const [prizeValue, count] of Object.entries(prizeCounts)) {
@@ -96,20 +171,12 @@ const ScratchGame: React.FC = () => {
         setMessage("Try again!");
         setGameEnded(true);
       }
-      */
-      
-      // Remove winning condition temporarily, just proceed when all prizes are revealed
-      if (newRevealedPrizes.length === prizes.length && !gameEnded) {
-        setMessage("Try again!");
-        setGameEnded(true);
-      }
 
       return newRevealedPrizes;
     });
   };
 
   const resetGame = () => {
-    setPrizes(generateRandomPrizes());
     setIsRevealed(false);
     setRevealedPrizes([]);
     setWinningPrize(null);
@@ -154,8 +221,12 @@ const ScratchGame: React.FC = () => {
       >
         <div className="w-full md:w-4/5 rounded-[20px] py-4 scratch-bg max-md:px-4 relative">
           <p className="text-light font-bold text-center font-anaheim tracking-wide">
-            Match 3 identical prize amounts to win.
+            Match 3 identical prize amounts to win.{" "}
           </p>
+          <p className="text-light font-bold text-center font-anaheim tracking-wide">
+            Number of Scratches: {userScratches}
+          </p>
+
           <div>
             <div className="grid grid-cols-3 gap-2 max-w-[701px] mx-auto bg-gradient-to-b px-5 py-4 rounded-[28px] place-items-center">
               {prizes.map((prize, index) => (
@@ -193,8 +264,13 @@ const ScratchGame: React.FC = () => {
             onClick={() => {
               if (gameEnded) {
                 resetGame(); // Reset the game
-              } else {
+              } else if (userScratches > 0) {
                 setIsRevealed(true); // Reveal the prizes
+              } else {
+                setMessage(
+                  "You have 0 scratches left! To scratch more, text PLAY to 20444."
+                );
+                setShowModal(true);
               }
             }}
             className="bg-[#87131B] w-max mx-auto text-light py-3 px-8 text-sm my-2 mb-4 md:text-base font-semibold rounded-lg flex self-center justify-center"

@@ -1,15 +1,15 @@
 export const navLinks = [
     {
       name: "How to play",
-      href: "#",
+      href: "/#howtoplay",
     },
     {
       name: "Review",
-      href: "#",
+      href: "/#review",
     },
     {
       name: "Rewards",
-      href: "#",
+      href: "/#rewards",
     },
   ];
 

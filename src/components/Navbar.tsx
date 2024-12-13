@@ -5,8 +5,8 @@ import { navLinks } from '../data';
 
 const Navbar: React.FC = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-
     const navigate = useNavigate();
+    const token = sessionStorage.getItem('token');
 
     const handleLinkClick = (path: string) => {
         setIsMenuOpen(false);
@@ -14,9 +14,9 @@ const Navbar: React.FC = () => {
     };
 
     const renderedLinks = navLinks.map((link) => (
-        <Link to={link.href} key={link.name} className="" onClick={() => handleLinkClick(link.href)}>
+        <a href={link.href} key={link.name} className="" onClick={() => handleLinkClick(link.href)}>
             {link.name}
-        </Link>
+        </a>
     ));
 
     return (
@@ -29,7 +29,12 @@ const Navbar: React.FC = () => {
                 <div className="hidden md:flex items-center space-x-4 xl:space-x-10 text-sm">
                     {renderedLinks}
 
-                    <button className='bg-[#ED222F] text-light py-2 px-4 rounded-lg font-semibold' onClick={()=>navigate('/scratch-game')}>Start Playing</button>
+                    <button
+                        className="bg-[#ED222F] text-light py-2 px-4 rounded-lg font-semibold"
+                        onClick={() => navigate(token ? '/scratch-game' : '/login')}
+                    >
+                        {token ? 'Start Playing' : 'Login'}
+                    </button>
                 </div>
 
                 <div className='md:hidden flex items-center gap-8 '>
@@ -55,7 +60,12 @@ const Navbar: React.FC = () => {
                     <div className="flex flex-col space-y-4 my-10 text-xl tracking-tighter font-medium">
                         {renderedLinks}
 
-                        <button className='bg-[#ED222F] text-light py-2 px-4 rounded-lg font-semibold' onClick={()=>navigate('/scratch-game')}>Start Playing</button>
+                        <button
+                            className="bg-[#ED222F] text-light py-2 px-4 rounded-lg font-semibold"
+                            onClick={() => navigate(token ? '/scratch-game' : '/login')}
+                        >
+                            {token ? 'Start Playing' : 'Login'}
+                        </button>
                     </div>
 
                 </div>
