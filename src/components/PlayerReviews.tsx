@@ -4,7 +4,7 @@ import { reviews } from '../data';
 
 const PlayerReviews: React.FC = () => {
     return (
-        <section className="py-12 md:py-20 bg-dark text-light rounded-xl mx-1 md:mx-5 px-4">
+        <section id='review' className="py-12 md:py-20 bg-dark text-light rounded-xl mx-1 md:mx-5 px-4">
             <div className="container mx-auto">
                 <div className='text-center mb-10'>
 

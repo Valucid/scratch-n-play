@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import WinnersList from "../components/WinnersList"; // Corrected import name
+import WinnersList from "../components/WinnersList";
 import ScratchCard from "../components/ScratchArea";
 import Confetti from "react-confetti";
 import { useWindowSize } from "react-use";
@@ -8,7 +8,6 @@ import axios from "axios";
 const ScratchGame: React.FC = () => {
   const [prizes, setPrizes] = useState<string[]>(Array(9).fill(""));
   const [isRevealed, setIsRevealed] = useState(false);
-  const [winningPrize, setWinningPrize] = useState<string | null>(null);
   const [message, setMessage] = useState<string>("");
   const [gameEnded, setGameEnded] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -19,7 +18,8 @@ const ScratchGame: React.FC = () => {
   const { width, height } = useWindowSize();
   const [scratchMessage, setScratchMessage] = useState("You Have 0 scratches left");
   const [scratchValue, setScratchValue] = useState<number>(0);
-  const [hasPlayed, setHasPlayed] = useState(false); // New state to prevent multiple plays
+  const [hasPlayed, setHasPlayed] = useState(false); // Prevent multiple plays
+  const [scratchCount, setScratchCount] = useState(0); // Track number of scratches
 
   // Fetch scratch data from the API
   const fetchScratchData = async () => {
@@ -28,7 +28,7 @@ const ScratchGame: React.FC = () => {
 
     if (!token || !msisdn) {
       setScratchMessage("Invalid session. Please login again.");
-      setScratchValue(-1);
+      // setScratchValue(-1);
       return;
     }
 
@@ -48,17 +48,16 @@ const ScratchGame: React.FC = () => {
       }
     } catch (err) {
       console.error("Failed to fetch scratch data", err);
-      setScratchMessage("Failed to load scratch data. Please try again.");
+      setScratchMessage("I don't know how many scratches you have at the moment.");
     }
   };
 
   // Play the scratch game
   const playScratchGame = async () => {
-    if (hasPlayed) return; // Prevent multiple plays
     setHasPlayed(true); // Set flag to indicate the game has been played
 
     if (scratchValue <= -1) {
-      setMessage("You have 0 scratches left! To scratch more text PLAY to 20444.");
+      setMessage("You have 0 scratches left! To scratch more text, text PLAY to 20444.");
       setShowModal(true);
       setHasPlayed(false); // Reset flag to allow retry after showing modal
       return;
@@ -94,10 +93,9 @@ const ScratchGame: React.FC = () => {
         if (response.data.prize.length > 0) {
           const prizeDetails = response.data.prize[0];
           const winningPrize = `₦${prizeDetails.prizeValue}`;
-          const updatedPrizes = [winningPrize, winningPrize, winningPrize, ...Array(6).fill("")].sort(() => Math.random() - 0.5);
+          const updatedPrizes = generatePrizesWithWin(winningPrize);
           setPrizes(updatedPrizes);
-          setMessage(`Congratulations! You have won ₦${prizeDetails.prizeValue} ${prizeDetails.prizeCategory}`);
-          setWinningPrize(winningPrize);
+          setMessage(`Congratulations! You have won ${winningPrize} ${prizeDetails.prizeCategory}`);
           setShowConfetti(true);
           setGameEnded(true); // Mark game as ended
         } else {
@@ -119,7 +117,15 @@ const ScratchGame: React.FC = () => {
     }
   };
 
-  // Generate random prizes ensuring no more than two of each type
+  // Generate prizes with the winning prize appearing exactly 3 times
+  const generatePrizesWithWin = (winningPrize: string) => {
+    const otherPrizes = generateRandomPrizesNoMatch().filter(prize => prize !== winningPrize);
+    const selectedOtherPrizes = otherPrizes.slice(0, 6); // Ensure only 6 other prizes
+    const updatedPrizes = [winningPrize, winningPrize, winningPrize, ...selectedOtherPrizes];
+    return updatedPrizes.sort(() => Math.random() - 0.5);
+  };
+
+  // Generate random prizes ensuring no prize appears more than twice
   const generateRandomPrizesNoMatch = () => {
     const possiblePrizes = [100, 200, 500, 1000, 2000, 5000];
     const prizeCounts: { [key: string]: number } = {};
@@ -129,7 +135,7 @@ const ScratchGame: React.FC = () => {
       const randomIndex = Math.floor(Math.random() * possiblePrizes.length);
       const prize = possiblePrizes[randomIndex];
       const count = prizeCounts[prize] || 0;
-      if (count < 2) {
+      if (count < 2) { // Limit to 2 occurrences per prize
         prizes.push(`₦${prize}`);
         prizeCounts[prize] = count + 1;
       }
@@ -143,18 +149,25 @@ const ScratchGame: React.FC = () => {
     fetchScratchData();
   }, []);
 
+  // Automatically reveal prizes after 3 scratches
+  useEffect(() => {
+    if (scratchCount === 3 && hasPlayed) {
+      setIsRevealed(true);
+    }
+  }, [scratchCount, hasPlayed]);
+
   // Reset the game to initial state
   const resetGame = async () => {
     await fetchScratchData();
     setPrizes(Array(9).fill("")); // Reset to covered state
     setIsRevealed(false);
-    setWinningPrize(null);
     setMessage("");
     setGameEnded(false);
     setShowModal(false);
     setShowConfetti(false);
     setGameId((prevGameId) => prevGameId + 1);
     setHasPlayed(false); // Reset play flag
+    setScratchCount(0); // Reset scratch count
   };
 
   // Handle modal close
@@ -162,6 +175,16 @@ const ScratchGame: React.FC = () => {
     setShowModal(false);
     if (gameEnded) {
       setIsRevealed(false); // Allow user to play again
+    }
+  };
+
+  // Handle card reveal
+  const handleReveal = () => {
+    if (scratchCount < 3) {
+      if (scratchCount === 0 && !hasPlayed && !gameEnded) {
+        playScratchGame();
+      }
+      setScratchCount((prev) => prev + 1);
     }
   };
 
@@ -197,18 +220,14 @@ const ScratchGame: React.FC = () => {
               {prizes.map((prize, index) => (
                 <div
                   key={`${gameId}-${index}`}
-                  className="w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] lg:w-[200px] lg:h-[200px]"
+                  className="w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] lg:w-[200px] lg:h-[200px}"
                 >
                   <ScratchCard
                     image="/images/glitters.svg"
                     brushSize={15}
                     prize={prize}
                     isRevealed={isRevealed}
-                    onReveal={() => {
-                      if (!hasPlayed && !gameEnded) {
-                        playScratchGame();
-                      }
-                    }}
+                    onReveal={handleReveal}
                     aria-label={`Scratch card ${index + 1}`}
                   />
                 </div>
@@ -248,12 +267,13 @@ const ScratchGame: React.FC = () => {
             onClick={() => {
               if (gameEnded) {
                 resetGame(); // Reset the game
-              } else {
-                setIsRevealed(true); // Reveal the prizes
+              } else if (scratchCount === 3) {
+                setIsRevealed(true); // Reveal the prizes if 3 scratches made
               }
             }}
             className="bg-[#87131B] w-max mx-auto text-light py-3 px-8 text-sm my-2 mb-4 md:text-base font-semibold rounded-lg flex self-center justify-center focus:outline-none focus:ring-2 focus:ring-[#FFA500] focus:ring-opacity-50"
             aria-pressed={gameEnded}
+            disabled={scratchCount < 3 && !gameEnded} // Disable if not ready to reveal
           >
             {gameEnded ? "Play Again" : "Reveal Prizes"}
           </button>

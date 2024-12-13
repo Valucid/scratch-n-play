@@ -5,7 +5,7 @@ import { steps } from '../data';
 
 const HowToPlay: React.FC = () => {
     return (
-        <section className=" py-12 px-4 md:py-20 w-full gap-4">
+        <section id='howtoplay' className="py-12 px-4 md:py-20 w-full gap-4">
             <div className="container mx-auto flex">
 
 

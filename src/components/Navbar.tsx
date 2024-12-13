@@ -14,9 +14,9 @@ const Navbar: React.FC = () => {
     };
 
     const renderedLinks = navLinks.map((link) => (
-        <Link to={link.href} key={link.name} className="" onClick={() => handleLinkClick(link.href)}>
+        <a href={link.href} key={link.name} className="" onClick={() => handleLinkClick(link.href)}>
             {link.name}
-        </Link>
+        </a>
     ));
 
     return (

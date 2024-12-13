@@ -3,7 +3,7 @@ import { whyScratch } from '../data';
 
 const WhyScratchHere: React.FC = () => {
     return (
-        <section className=" py-12 px-4 md:py-20 w-full gap-4 text-center">
+        <section id='rewards' className=" py-12 px-4 md:py-20 w-full gap-4 text-center">
             <div className="container mx-auto">
                 <h2 className="text-3xl md:text-5xl mb-4">Why Scratch Here?</h2>
                 <p className='max-md:text-sm text-gray1'>Playing is Easy! Just follow this easy steps: Subscribe, Scratch the designated area, and Claim your prizes.</p>
