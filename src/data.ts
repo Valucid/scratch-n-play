@@ -26,7 +26,7 @@ export const steps = [
     {
       step: 'Step 1',
       title:'Subscribe',
-      description: 'Text Subscribe to 32109  to get started on Scratch and Play',
+      description: 'Text SP to 20444  to get started on Scratch and Play',
       image: '/images/one.svg',
     },
     {
