@@ -1,4 +1,4 @@
-import React, { useRef, useState, MouseEvent, TouchEvent, useLayoutEffect } from "react";
+import React, { useRef, useState, MouseEvent, TouchEvent, useEffect } from "react";
 
 interface ScratchCardProps {
   image: string;
@@ -19,7 +19,7 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasBeenRevealed, setHasBeenRevealed] = useState(false);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
