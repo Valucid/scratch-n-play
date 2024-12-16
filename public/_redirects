@@ -1,3 +1,1 @@
-/api/*   https://ydvassdp.com:2001/api/:splat   200
-/another-api/*   https://ydvassdp.com:6001/:splat   200
 /*   /index.html   200
