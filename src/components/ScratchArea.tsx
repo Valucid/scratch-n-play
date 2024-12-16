@@ -1,4 +1,4 @@
-import React, { useRef, useState, MouseEvent, TouchEvent, useEffect } from "react";
+import React, { useRef, useState, MouseEvent, TouchEvent, useLayoutEffect } from "react";
 
 interface ScratchCardProps {
   image: string;
@@ -19,7 +19,7 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasBeenRevealed, setHasBeenRevealed] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -34,9 +34,6 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
       context.clearRect(0, 0, canvas.width, canvas.height);
     };
 
-    const topLayer = new Image();
-    topLayer.src = `${image}?cache=${Date.now()}`; // Cache bust for mobile reload
-
     if (isRevealed) {
       clearCanvas(); // Clear the canvas when isRevealed is true
       if (!hasBeenRevealed) {
@@ -44,9 +41,15 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
         onReveal(prize); // Trigger the reveal callback
       }
     } else {
+      // Load and draw the glitter image
+      const topLayer = new Image();
+      topLayer.src = `${image}?cache=${Date.now()}`; // Cache bust for fresh load
       topLayer.onload = () => {
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.drawImage(topLayer, 0, 0, canvas.width, canvas.height);
+      };
+      topLayer.onerror = () => {
+        console.error("Failed to load glitter image:", image);
       };
     }
   }, [image, isRevealed]);
@@ -76,7 +79,6 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
     }
   };
 
-  // Scratch function for mouse events
   const scratch = (event: MouseEvent<HTMLCanvasElement> | TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing || !canvasRef.current) return;
 
