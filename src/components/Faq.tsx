@@ -14,7 +14,7 @@ const Faq: React.FC = () => {
                         <AccordionItem
                             key={idx}
                             title={item.heading}
-                            content={item.text}
+                            content={[item.text]}
                         />
                     ))}
                 </div>

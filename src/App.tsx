@@ -4,6 +4,7 @@ import Home from './Pages/Home';
 import ScratchGame from './Pages/ScratchGame';
 import Layout from './components/Layout';
 import Login from './Pages/Login';
+import Terms from './Pages/Terms';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const token = sessionStorage.getItem('token');
@@ -24,8 +25,10 @@ const App: React.FC = () => {
                             </PrivateRoute>
                         }
                     />
+                    <Route path="/terms" element={<Terms/>} />
                 </Route>
                 <Route path="/login" element={<Login />} />
+
             </Routes>
         </Router>
     );

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 
 interface AccordionItemProps {
     title: string;
-    content: string;
+    content: (string | string[])[];
 }
 
 const AccordionItem: React.FC<AccordionItemProps> = ({ title, content }) => {
@@ -27,7 +27,21 @@ const AccordionItem: React.FC<AccordionItemProps> = ({ title, content }) => {
                     {isOpen ? <Minus /> : <Plus />}
                 </div>
             </div>
-            {isOpen && <div className=" text-gray1 text-left mt-4 text-sm md:text-base">{content}</div>}
+            {isOpen && (
+                <div className="text-gray1 text-sm md:text-base text-left mt-4">
+                    {content.map((item, idx) =>
+                        Array.isArray(item) ? (
+                            <ul key={idx} className=" ml-8">
+                                {item.map((listItem, i) => (
+                                    <li key={i}>{listItem}</li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p key={idx}>{item}</p>
+                        )
+                    )}
+                </div>
+            )}
         </div>
     );
 };
