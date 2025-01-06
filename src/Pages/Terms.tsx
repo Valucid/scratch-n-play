@@ -4,7 +4,7 @@ import { termsData } from '../data'
 
 const Terms:React.FC = () => {
     return (
-        <section className='container mx-auto'>
+        <section className='container mx-auto px-4'>
             <div className='my-16'>
                 <h2 className="text-3xl md:text-5xl mb-4">Scratch and Play Terms and Conditions
                 </h2>
