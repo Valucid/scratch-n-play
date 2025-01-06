@@ -68,19 +68,19 @@ export const whyScratch = [
 export const faq = [
   {
     heading: "What prizes can I win?",
-    text: "From cash rewards to exclusive deals, there’s always something waiting for you!",
+    text: "Participants are eligible to Win Cash and Airtime Prizes ",
   },
   {
     heading: "How can I redeem my prizes?",
-    text: "From cash rewards to exclusive deals, there’s always something waiting for you!",
+    text: " For smaller prizes, like airtime or data, you can receive them instantly through your account, for cash prizes you'd be instructed to share your account details or  you will receive a notification with instructions on how to claim your winnings, which could include visiting a redemption center or providing your contact information for prize delivery",
   },
   {
     heading: " how do I know I won?",
-    text: "From cash rewards to exclusive deals, there’s always something waiting for you!",
+    text: "Once you win a prize, you will receive a notification with instructions on how to claim it.",
   },
   {
     heading: " Can I receive my cash as airtime?",
-    text: "From cash rewards to exclusive deals, there’s always something waiting for you!",
+    text: "No, Airtime prizes are instant.",
   },
 ];
 export const reviews = [
