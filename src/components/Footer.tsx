@@ -22,7 +22,7 @@ const Footer: React.FC = () => {
                             {renderedLinks}
 
                         </div>
-                        <a className='underline mt-3 text-gray2' href='mailto:info@scratchandplay.com'>info@scratchandplay.com</a>
+                        {/* <a className='underline mt-3 text-gray2' href='mailto:info@scratchandplay.com'>info@scratchandplay.com</a> */}
                     </div>
                 </div>
             </div>
