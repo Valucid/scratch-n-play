@@ -20,6 +20,7 @@ export const authSlice = createSlice({
       state.isLoggedIn = false;
       sessionStorage.removeItem('token');
       sessionStorage.removeItem('msisdn')
+      sessionStorage.removeItem('scratchValue')
       storage.removeItem('persist:root');
     },
 
