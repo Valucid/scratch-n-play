@@ -146,6 +146,7 @@ const ScratchGame: React.FC = () => {
         setWinningPrize(winningPrizeValue);
         setMessage(`You have won ${winningPrizeValue}!`);
         setGameEnded(true);
+        resetGame();
       } else if (newRevealedPrizes.length === prizes.length && !gameEnded) {
         // All cards are revealed and the player hasn't won
         setMessage("Try again!");
@@ -155,11 +156,7 @@ const ScratchGame: React.FC = () => {
       return newRevealedPrizes;
     });
   };
-  
-  
-  
 
-  console.log({ revealedPrizes, winningPrize, prizes, isRevealed, gameEnded });
 
   const resetGame = () => {
     setIsRevealed(false);
@@ -186,7 +183,7 @@ const ScratchGame: React.FC = () => {
     }
   }, [gameEnded]);
 
-  console.log({ scratchValue });
+  // console.log({ scratchValue });
 
   return (
     <div className="">
