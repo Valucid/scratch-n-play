@@ -21,21 +21,23 @@ const ScratchGame: React.FC = () => {
     const possiblePrizes = [100, 200, 500, 1000, 2000, 5000];
     const prizeCounts: { [key: string]: number } = {};
     const prizes: string[] = [];
-  
+
     if (winningPrice?.length > 0) {
       // Winning game logic
       const winPrize = `₦${winningPrice[0].priceValue}`;
-  
+
       // Ensure winning prize appears exactly 3 times
       for (let i = 0; i < 3; i++) {
         prizes.push(winPrize);
         prizeCounts[winPrize] = (prizeCounts[winPrize] || 0) + 1;
       }
-  
+
       // Add remaining prizes while ensuring no prize appears more than twice
       while (prizes.length < 9) {
-        const randomPrize = `₦${possiblePrizes[Math.floor(Math.random() * possiblePrizes.length)]}`;
-  
+        const randomPrize = `₦${
+          possiblePrizes[Math.floor(Math.random() * possiblePrizes.length)]
+        }`;
+
         if ((prizeCounts[randomPrize] || 0) < 2) {
           prizes.push(randomPrize);
           prizeCounts[randomPrize] = (prizeCounts[randomPrize] || 0) + 1;
@@ -44,21 +46,22 @@ const ScratchGame: React.FC = () => {
     } else {
       // Losing game logic (ensure no prize appears more than twice)
       while (prizes.length < 9) {
-        const randomPrize = `₦${possiblePrizes[Math.floor(Math.random() * possiblePrizes.length)]}`;
-  
+        const randomPrize = `₦${
+          possiblePrizes[Math.floor(Math.random() * possiblePrizes.length)]
+        }`;
+
         if ((prizeCounts[randomPrize] || 0) < 2) {
           prizes.push(randomPrize);
           prizeCounts[randomPrize] = (prizeCounts[randomPrize] || 0) + 1;
         }
       }
     }
-  
+
     // Shuffle the array
     prizes.sort(() => Math.random() - 0.5);
-  
+
     return prizes;
   };
-  
 
   const [prizes, setPrizes] = useState<string[]>([]);
   const [isRevealed, setIsRevealed] = useState(false);
@@ -72,6 +75,7 @@ const ScratchGame: React.FC = () => {
   // const [userScratches, setUserScratches] = useState<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const { width, height } = useWindowSize();
+  const [revealedIndexes, setRevealedIndexes] = useState<number[]>([]);
 
   useEffect(() => {
     const storedScratchValue = sessionStorage.getItem("scratchValue");
@@ -87,20 +91,17 @@ const ScratchGame: React.FC = () => {
     if (scratchValue !== undefined) {
       sessionStorage.setItem("scratchValue", scratchValue.toString());
     }
-
   }, [scratchValue]);
-
-
- 
 
   useEffect(() => {
     const initializeGame = async () => {
-      if ((scratchValue ?? 0) > 0) {
+      if ((scratchValue ?? 0) > 0 && prizes.length === 0) {
+        // Prevent re-generation
         const generatedPrizes = await generateRandomPrizes();
         setPrizes(generatedPrizes);
-      } else if((scratchValue ?? 0) <= 0) {
+      } else if ((scratchValue ?? 0) <= 0) {
         setMessage(
-          "You have 0 scratches left! To scratch more, text PLAY to 20444ssss."
+          "You have 0 scratches left! To scratch more, text PLAY to 20444."
         );
         setShowModal(true);
       }
@@ -108,29 +109,29 @@ const ScratchGame: React.FC = () => {
     if (scratchValue !== undefined) initializeGame();
   }, [scratchValue, winningPrice]);
 
-  const handleReveal = (prize: string) => {
+  const handleReveal = (prize: string, index: number) => {
+    if (revealedIndexes.includes(index)) return; // Prevent duplicate reveals
+
+    setRevealedIndexes((prevIndexes) => [...prevIndexes, index]); // Track revealed index
+
     if (!isRevealed) {
       // Deduct one scratch only when revealing for the first time
       const updatedScratchValue = Math.max((scratchValue ?? 0) - 1, 0);
-  
-      // Update state and sessionStorage
-      dispatch(updateUserScratchValue({ newScratchValue: updatedScratchValue }));
+      dispatch(
+        updateUserScratchValue({ newScratchValue: updatedScratchValue })
+      );
       sessionStorage.setItem("scratchValue", updatedScratchValue.toString());
     }
-  
+
     setRevealedPrizes((prevRevealedPrizes) => {
-      // Ensure the prize is only revealed once per scratch attempt
-      if (prevRevealedPrizes.includes(prize)) return prevRevealedPrizes;
-  
-      // Add only the prize, not empty slots
       const newRevealedPrizes = [...prevRevealedPrizes, prize];
-  
+
       // Count occurrences of each prize
       const prizeCounts: { [key: string]: number } = {};
       newRevealedPrizes.forEach((p) => {
         if (p) prizeCounts[p] = (prizeCounts[p] || 0) + 1;
       });
-  
+
       // Check if any prize count reaches 3
       let hasWon = false;
       let winningPrizeValue = null;
@@ -141,22 +142,22 @@ const ScratchGame: React.FC = () => {
           break;
         }
       }
-  
+
       if (hasWon && !gameEnded) {
         setWinningPrize(winningPrizeValue);
         setMessage(`You have won ${winningPrizeValue}!`);
         setGameEnded(true);
-        resetGame();
+        setShowConfetti(true);
       } else if (newRevealedPrizes.length === prizes.length && !gameEnded) {
-        // All cards are revealed and the player hasn't won
         setMessage("Try again!");
         setGameEnded(true);
       }
-  
+
       return newRevealedPrizes;
     });
   };
 
+  console.log({ revealedPrizes, prizes });
 
   const resetGame = () => {
     setIsRevealed(false);
@@ -166,8 +167,11 @@ const ScratchGame: React.FC = () => {
     setGameEnded(false);
     setShowModal(false);
     setShowConfetti(false);
-    setGameId((prevGameId) => prevGameId + 1);
+    setRevealedIndexes([]); // Reset revealed indexes
+    setGameId((prevGameId) => prevGameId + 1); // Force re-render of ScratchCards
   };
+
+
 
   // Delay showing the modal by 1 seconds when the game ends
   useEffect(() => {
@@ -178,11 +182,13 @@ const ScratchGame: React.FC = () => {
           setShowConfetti(true);
         }
       }, 1000);
-
+  
       return () => clearTimeout(timer);
     }
   }, [gameEnded]);
 
+
+  console.log({gameEnded})
   // console.log({ scratchValue });
 
   return (
@@ -222,8 +228,9 @@ const ScratchGame: React.FC = () => {
                     image="/images/glitters.svg"
                     brushSize={15}
                     prize={prize}
-                    isRevealed={isRevealed}
-                    onReveal={handleReveal}
+                    isRevealed={revealedIndexes.includes(index)} // Disable already revealed
+                    onReveal={() => handleReveal(prize, index)}
+                    index={index}
                   />
                 </div>
               ))}
@@ -248,9 +255,13 @@ const ScratchGame: React.FC = () => {
           <button
             onClick={() => {
               if (gameEnded) {
-                resetGame(); // Reset the game
-              } else if (scratchValue !== undefined && scratchValue > 0) {
-                setIsRevealed(true); // Reveal the prizes
+                resetGame(); // Reset the game immediately when it ends
+                return;
+              }
+
+              if (scratchValue !== undefined && scratchValue > 0) {
+                setIsRevealed(true); // Reveal prizes
+
                 const updatedScratchValue = Math.max(
                   (scratchValue ?? 0) - 9,
                   0
@@ -269,10 +280,11 @@ const ScratchGame: React.FC = () => {
 
                 setTimeout(() => {
                   resetGame();
+                }, 3000);
+                return;
+              }
 
-                }, 3000)
-
-              } else if (scratchValue !== undefined && scratchValue === 0) {
+              if (scratchValue !== undefined && scratchValue === 0) {
                 setMessage(
                   "You have 0 scratches left! To scratch more, text PLAY to 20444."
                 );
@@ -283,10 +295,6 @@ const ScratchGame: React.FC = () => {
           >
             {gameEnded ? "Play Again" : "Reveal Prizes"}
           </button>
-
-          <button type="button"
-          onClick={()=> resetGame()}
-          className="bg-[#87131B] w-max mx-auto text-light py-3 px-8 text-sm my-2 mb-4 md:text-base font-semibold rounded-lg flex self-center justify-center">Reset Game</button>
         </div>
       </div>
     </div>
