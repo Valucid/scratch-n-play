@@ -65,7 +65,7 @@ const ScratchGame: React.FC = () => {
 
   const [prizes, setPrizes] = useState<string[]>([]);
   const [isRevealed, setIsRevealed] = useState(false);
-  const [revealedPrizes, setRevealedPrizes] = useState<string[]>([]);
+  const [_, setRevealedPrizes] = useState<string[]>([]);
   const [winningPrize, setWinningPrize] = useState<string | null>(null);
   const [message, setMessage] = useState<string>("");
   const [gameEnded, setGameEnded] = useState(false);
@@ -157,8 +157,6 @@ const ScratchGame: React.FC = () => {
     });
   };
 
-  console.log({ revealedPrizes, prizes });
-
   const resetGame = () => {
     setIsRevealed(false);
     setRevealedPrizes([]);
@@ -171,8 +169,6 @@ const ScratchGame: React.FC = () => {
     setGameId((prevGameId) => prevGameId + 1); // Force re-render of ScratchCards
   };
 
-
-
   // Delay showing the modal by 1 seconds when the game ends
   useEffect(() => {
     if (gameEnded) {
@@ -182,14 +178,10 @@ const ScratchGame: React.FC = () => {
           setShowConfetti(true);
         }
       }, 1000);
-  
+
       return () => clearTimeout(timer);
     }
   }, [gameEnded]);
-
-
-  console.log({gameEnded})
-  // console.log({ scratchValue });
 
   return (
     <div className="">
