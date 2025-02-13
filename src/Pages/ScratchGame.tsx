@@ -79,13 +79,14 @@ const ScratchGame: React.FC = () => {
 
   useEffect(() => {
     const storedScratchValue = sessionStorage.getItem("scratchValue");
-
-    if (!storedScratchValue) {
-      dispatch(fetchUserScratchValue());
+  
+    if (storedScratchValue) {
+      dispatch(updateUserScratchValue({ newScratchValue: parseInt(storedScratchValue) }));
     } else {
-      sessionStorage.setItem("scratchValue", scratchValue?.toString() || "0");
+      dispatch(fetchUserScratchValue());
     }
-  }, []);
+  }, [dispatch]);
+  
 
   useEffect(() => {
     if (scratchValue !== undefined) {
@@ -108,6 +109,8 @@ const ScratchGame: React.FC = () => {
     };
     if (scratchValue !== undefined) initializeGame();
   }, [scratchValue, winningPrice]);
+
+  console.log({scratchValue, winningPrice, prizes})
 
   const handleReveal = (prize: string, index: number) => {
     if (revealedIndexes.includes(index)) return; // Prevent duplicate reveals
