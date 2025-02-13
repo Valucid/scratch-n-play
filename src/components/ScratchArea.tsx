@@ -76,11 +76,18 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
 
     const percent = (transparentPixels / totalPixels) * 100;
 
+    // if (percent >= 50) {
+    //   context.clearRect(0, 0, canvas.width, canvas.height);
+    //   hasBeenRevealed.current = true; // Update ref immediately
+    //   onReveal(prize, index); // Call once when 50% is scratched
+    // }
+
     if (percent >= 50) {
       context.clearRect(0, 0, canvas.width, canvas.height);
-      hasBeenRevealed.current = true; // Update ref immediately
-      onReveal(prize, index); // Call once when 50% is scratched
+      hasBeenRevealed.current = true; 
+      onReveal(prize, index); 
     }
+    
   };
 
   const scratch = (event: MouseEvent<HTMLCanvasElement> | TouchEvent<HTMLCanvasElement>) => {
@@ -115,7 +122,7 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
     <div className="relative w-full h-full">
       {/* Prize text */}
       <div className="absolute inset-0 flex items-center justify-center text-black font-bold bg-[#C4C4C4] rounded-[10px]">
-        {prize}
+      {isRevealed ? prize : '*****'}
       </div>
       {/* Canvas */}
       <canvas
