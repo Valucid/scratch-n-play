@@ -228,6 +228,7 @@ const ScratchGame: React.FC = () => {
                     prize={prize}
                     isRevealed={isRevealed}
                     onReveal={handleReveal}
+                    index={index}
                     aria-label={`Scratch card ${index + 1}`}
                   />
                 </div>

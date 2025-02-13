@@ -5,7 +5,8 @@ interface ScratchCardProps {
   brushSize: number;
   prize: string;
   isRevealed: boolean;
-  onReveal: (prize: string) => void;
+  onReveal: (prize: string, index: number) => void;
+  index: number;
 }
 
 const ScratchCard: React.FC<ScratchCardProps> = ({
@@ -14,10 +15,11 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
   prize,
   isRevealed,
   onReveal,
+  index,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [hasBeenRevealed, setHasBeenRevealed] = useState(false);
+  const hasBeenRevealed = useRef(false); // Use ref to track reveal status
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
@@ -36,9 +38,9 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
 
     if (isRevealed) {
       clearCanvas(); // Clear the canvas when isRevealed is true
-      if (!hasBeenRevealed) {
-        setHasBeenRevealed(true);
-        onReveal(prize); // Trigger the reveal callback
+      if (!hasBeenRevealed.current) {
+        hasBeenRevealed.current = true;
+        onReveal(prize, index); // Ensure onReveal runs once
       }
     } else {
       // Load and draw the glitter image
@@ -56,6 +58,8 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
 
   // Function to calculate scratch percentage
   const calculateScratchPercentage = () => {
+    if (hasBeenRevealed.current) return; // Prevent multiple calls
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -72,10 +76,10 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
 
     const percent = (transparentPixels / totalPixels) * 100;
 
-    if (percent >= 50 && !hasBeenRevealed) {
+    if (percent >= 50) {
       context.clearRect(0, 0, canvas.width, canvas.height);
-      setHasBeenRevealed(true);
-      onReveal(prize);
+      hasBeenRevealed.current = true; // Update ref immediately
+      onReveal(prize, index); // Call once when 50% is scratched
     }
   };
 

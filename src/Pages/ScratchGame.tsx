@@ -1,109 +1,63 @@
 import React, { useState, useRef, useEffect } from "react";
-import WinnerList from "../components/WinnersList";
+// import WinnerList from "../components/WinnersList";
 import ScratchCard from "../components/ScratchArea";
 import Confetti from "react-confetti";
 import { useWindowSize } from "react-use";
-import axios from "axios";
-
-// API call to fetch the number of scratches a user has
-const fetchUserScratches = async () => {
-  const token = sessionStorage.getItem("token");
-  const msisdn = sessionStorage.getItem("msisdn");
-
-  if (!token || !msisdn) {
-    // Handle invalid session
-    return -1;
-  }
-
-  try {
-    const response = await axios.get(
-      `https://api.valucid.com/api/v1/users/${msisdn}/check-scratch`,
-      {
-        headers: {
-          "x-auth-token": token,
-        },
-      }
-    );
-    const data = response.data as { scratchValue: number };
-    return data.scratchValue;
-  } catch (error) {
-    console.error("Error fetching user scratches:", error);
-    return -1;
-  }
-};
-
-// API call to fetch the winning prize
-const fetchWinningPrize = async () => {
-  const token = sessionStorage.getItem("token");
-  const msisdn = sessionStorage.getItem("msisdn");
-
-  if (!token || !msisdn) {
-    // Handle invalid session
-    return null;
-  }
-
-  try {
-    const response = await axios.get(
-      `https://api.valucid.com/api/v1/users/${msisdn}/play`,
-      {
-        headers: {
-          "x-auth-token": token,
-        },
-      }
-    );
-
-    if (response.data.status === 400) {
-      return null;
-    } else if (response.data.status === 200 && response.data.prize.length > 0) {
-      const prizeDetails = response.data.prize[0];
-      return prizeDetails.prizeValue;
-    } else {
-      return null;
-    }
-  } catch (error) {
-    console.error("Error fetching winning prize:", error);
-    return null;
-  }
-};
+// import axios from "axios";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import {
+  fetchUserScratchValue,
+  updateUserScratchValue,
+  // getWinningPrize,
+} from "../redux/slices/scratchSlice/action";
 
 const ScratchGame: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const {
+    scratches: { data: scratchValue },
+    prize: { data: winningPrice },
+  } = useAppSelector((state) => state.scratches);
   const generateRandomPrizes = async () => {
     const possiblePrizes = [100, 200, 500, 1000, 2000, 5000];
     const prizeCounts: { [key: string]: number } = {};
     const prizes: string[] = [];
 
-    const winningPrize = await fetchWinningPrize();
-
-    if (winningPrize) {
+    if (winningPrice?.length > 0) {
       // Winning game logic
-      // Add the winning prize three times to the prizes array
+      const winPrize = `₦${winningPrice[0].priceValue}`;
+
+      // Ensure winning prize appears exactly 3 times
       for (let i = 0; i < 3; i++) {
-        prizes.push(`₦${winningPrize}`);
-        prizeCounts[winningPrize] = (prizeCounts[winningPrize] || 0) + 1;
+        prizes.push(winPrize);
+        prizeCounts[winPrize] = (prizeCounts[winPrize] || 0) + 1;
       }
 
-      // Add six more prizes
+      // Add remaining prizes while ensuring no prize appears more than twice
       while (prizes.length < 9) {
-        const randomIndex = Math.floor(Math.random() * possiblePrizes.length);
-        const prize = possiblePrizes[randomIndex];
-        prizes.push(`₦${prize}`);
-        prizeCounts[prize] = (prizeCounts[prize] || 0) + 1;
+        const randomPrize = `₦${
+          possiblePrizes[Math.floor(Math.random() * possiblePrizes.length)]
+        }`;
+
+        if ((prizeCounts[randomPrize] || 0) < 2) {
+          prizes.push(randomPrize);
+          prizeCounts[randomPrize] = (prizeCounts[randomPrize] || 0) + 1;
+        }
       }
     } else {
-      // Losing game logic
+      // Losing game logic (ensure no prize appears more than twice)
       while (prizes.length < 9) {
-        const randomIndex = Math.floor(Math.random() * possiblePrizes.length);
-        const prize = possiblePrizes[randomIndex];
-        const count = prizeCounts[prize] || 0;
+        const randomPrize = `₦${
+          possiblePrizes[Math.floor(Math.random() * possiblePrizes.length)]
+        }`;
 
-        if (count < 2) {
-          prizes.push(`₦${prize}`);
-          prizeCounts[prize] = count + 1;
+        if ((prizeCounts[randomPrize] || 0) < 2) {
+          prizes.push(randomPrize);
+          prizeCounts[randomPrize] = (prizeCounts[randomPrize] || 0) + 1;
         }
       }
     }
 
-    // Shuffle the prizes array
+    // Shuffle the array
     prizes.sort(() => Math.random() - 0.5);
 
     return prizes;
@@ -118,37 +72,64 @@ const ScratchGame: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [gameId, setGameId] = useState(0);
-  const [userScratches, setUserScratches] = useState<number>(0);
+  // const [userScratches, setUserScratches] = useState<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const { width, height } = useWindowSize();
+  const [revealedIndexes, setRevealedIndexes] = useState<number[]>([]);
+
+  useEffect(() => {
+    const storedScratchValue = sessionStorage.getItem("scratchValue");
+
+    if (!storedScratchValue) {
+      dispatch(fetchUserScratchValue());
+    } else {
+      sessionStorage.setItem("scratchValue", scratchValue?.toString() || "0");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (scratchValue !== undefined) {
+      sessionStorage.setItem("scratchValue", scratchValue.toString());
+    }
+  }, [scratchValue]);
 
   useEffect(() => {
     const initializeGame = async () => {
-      const scratches = await fetchUserScratches();
-      setUserScratches(scratches);
-      if (scratches > 0) {
+      if ((scratchValue ?? 0) > 0 && prizes.length === 0) {
+        // Prevent re-generation
         const generatedPrizes = await generateRandomPrizes();
         setPrizes(generatedPrizes);
-      } else {
+      } else if ((scratchValue ?? 0) <= 0) {
         setMessage(
           "You have 0 scratches left! To scratch more, text PLAY to 20444."
         );
         setShowModal(true);
       }
     };
+    if (scratchValue !== undefined) initializeGame();
+  }, [scratchValue, winningPrice]);
 
-    initializeGame();
-  }, [gameId]);
+  const handleReveal = (prize: string, index: number) => {
+    if (revealedIndexes.includes(index)) return; // Prevent duplicate reveals
 
-  const handleReveal = (prize: string) => {
+    setRevealedIndexes((prevIndexes) => [...prevIndexes, index]); // Track revealed index
+
+    if (!isRevealed) {
+      // Deduct one scratch only when revealing for the first time
+      const updatedScratchValue = Math.max((scratchValue ?? 0) - 1, 0);
+      dispatch(
+        updateUserScratchValue({ newScratchValue: updatedScratchValue })
+      );
+      sessionStorage.setItem("scratchValue", updatedScratchValue.toString());
+    }
+
     setRevealedPrizes((prevRevealedPrizes) => {
       const newRevealedPrizes = [...prevRevealedPrizes, prize];
-      console.log(revealedPrizes);
 
       // Count occurrences of each prize
       const prizeCounts: { [key: string]: number } = {};
       newRevealedPrizes.forEach((p) => {
-        prizeCounts[p] = (prizeCounts[p] || 0) + 1;
+        if (p) prizeCounts[p] = (prizeCounts[p] || 0) + 1;
       });
 
       // Check if any prize count reaches 3
@@ -166,8 +147,8 @@ const ScratchGame: React.FC = () => {
         setWinningPrize(winningPrizeValue);
         setMessage(`You have won ${winningPrizeValue}!`);
         setGameEnded(true);
+        setShowConfetti(true);
       } else if (newRevealedPrizes.length === prizes.length && !gameEnded) {
-        // All cards are revealed and the player hasn't won
         setMessage("Try again!");
         setGameEnded(true);
       }
@@ -175,6 +156,8 @@ const ScratchGame: React.FC = () => {
       return newRevealedPrizes;
     });
   };
+
+  console.log({ revealedPrizes, prizes });
 
   const resetGame = () => {
     setIsRevealed(false);
@@ -184,8 +167,11 @@ const ScratchGame: React.FC = () => {
     setGameEnded(false);
     setShowModal(false);
     setShowConfetti(false);
-    setGameId((prevGameId) => prevGameId + 1);
+    setRevealedIndexes([]); // Reset revealed indexes
+    setGameId((prevGameId) => prevGameId + 1); // Force re-render of ScratchCards
   };
+
+
 
   // Delay showing the modal by 1 seconds when the game ends
   useEffect(() => {
@@ -196,10 +182,14 @@ const ScratchGame: React.FC = () => {
           setShowConfetti(true);
         }
       }, 1000);
-
+  
       return () => clearTimeout(timer);
     }
   }, [gameEnded]);
+
+
+  console.log({gameEnded})
+  // console.log({ scratchValue });
 
   return (
     <div className="">
@@ -224,7 +214,7 @@ const ScratchGame: React.FC = () => {
             Match 3 identical prize amounts to win.{" "}
           </p>
           <p className="text-light font-bold text-center font-anaheim tracking-wide">
-            Number of Scratches: {userScratches}
+            Number of Scratches: {scratchValue}
           </p>
 
           <div>
@@ -238,8 +228,9 @@ const ScratchGame: React.FC = () => {
                     image="/images/glitters.svg"
                     brushSize={15}
                     prize={prize}
-                    isRevealed={isRevealed}
-                    onReveal={handleReveal}
+                    isRevealed={revealedIndexes.includes(index)} // Disable already revealed
+                    onReveal={() => handleReveal(prize, index)}
+                    index={index}
                   />
                 </div>
               ))}
@@ -257,16 +248,43 @@ const ScratchGame: React.FC = () => {
         </div>
 
         <div>
-          <div className="max-md:hidden">
+          {/* <div className="max-md:hidden">
             <WinnerList />
-          </div>
+          </div> */}
+
           <button
             onClick={() => {
               if (gameEnded) {
-                resetGame(); // Reset the game
-              } else if (userScratches > 0) {
-                setIsRevealed(true); // Reveal the prizes
-              } else {
+                resetGame(); // Reset the game immediately when it ends
+                return;
+              }
+
+              if (scratchValue !== undefined && scratchValue > 0) {
+                setIsRevealed(true); // Reveal prizes
+
+                const updatedScratchValue = Math.max(
+                  (scratchValue ?? 0) - 9,
+                  0
+                );
+
+                // Update state and sessionStorage
+                dispatch(
+                  updateUserScratchValue({
+                    newScratchValue: updatedScratchValue,
+                  })
+                );
+                sessionStorage.setItem(
+                  "scratchValue",
+                  updatedScratchValue.toString()
+                );
+
+                setTimeout(() => {
+                  resetGame();
+                }, 3000);
+                return;
+              }
+
+              if (scratchValue !== undefined && scratchValue === 0) {
                 setMessage(
                   "You have 0 scratches left! To scratch more, text PLAY to 20444."
                 );
