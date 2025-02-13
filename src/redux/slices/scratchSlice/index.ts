@@ -42,7 +42,6 @@ const scratchSlice = createSlice({
         builder.addCase(getWinningPrize.pending, (state) => {
             state.prize.loading = true;
         }).addCase(getWinningPrize.fulfilled, (state, action) => {
-            console.log({action}, 'winningPrize')
             state.prize.loading = false;
             state.prize.data = action.payload.prize;
             state.scratches.success = true;
