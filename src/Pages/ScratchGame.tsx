@@ -223,7 +223,7 @@ const ScratchGame: React.FC = () => {
                     image="/images/glitters.svg"
                     brushSize={15}
                     prize={prize}
-                    isRevealed={revealedIndexes.includes(index)} // Disable already revealed
+                    isRevealed={revealedIndexes.includes(index)}
                     onReveal={() => handleReveal(prize, index)}
                     index={index}
                   />
