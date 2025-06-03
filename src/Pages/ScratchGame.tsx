@@ -79,14 +79,17 @@ const ScratchGame: React.FC = () => {
 
   useEffect(() => {
     const storedScratchValue = sessionStorage.getItem("scratchValue");
-  
+
     if (storedScratchValue) {
-      dispatch(updateUserScratchValue({ newScratchValue: parseInt(storedScratchValue) }));
+      dispatch(
+        updateUserScratchValue({
+          newScratchValue: parseInt(storedScratchValue),
+        })
+      );
     } else {
       dispatch(fetchUserScratchValue());
     }
   }, [dispatch]);
-  
 
   useEffect(() => {
     if (scratchValue !== undefined) {
@@ -109,8 +112,6 @@ const ScratchGame: React.FC = () => {
     };
     if (scratchValue !== undefined) initializeGame();
   }, [scratchValue, winningPrice]);
-
-  console.log({scratchValue, winningPrice, prizes})
 
   const handleReveal = (prize: string, index: number) => {
     if (revealedIndexes.includes(index)) return; // Prevent duplicate reveals
@@ -186,6 +187,14 @@ const ScratchGame: React.FC = () => {
     }
   }, [gameEnded]);
 
+  console.log({ revealedIndexes });
+
+  console.log({
+    scratchValue,
+    revealedIndexes: revealedIndexes.length,
+    scratchCount: scratchValue ?? 0 - revealedIndexes.length,
+  });
+
   return (
     <div className="">
       {showConfetti && (
@@ -250,19 +259,22 @@ const ScratchGame: React.FC = () => {
           <button
             onClick={() => {
               if (gameEnded) {
-                resetGame(); // Reset the game immediately when it ends
+                setTimeout(() => resetGame(), 3000);
                 return;
               }
 
               if (scratchValue !== undefined && scratchValue > 0) {
-                setIsRevealed(true); // Reveal prizes
+                setIsRevealed(true); // Reveal all cards
+                const allIndexes = prizes.map((_, i) => i);
+                setRevealedIndexes(allIndexes);
+                setRevealedPrizes(prizes);
+                const boxesScratched  = 9 - revealedIndexes.length;
 
+                // Deduct scratches for full reveal (e.g. 9 at once)
                 const updatedScratchValue = Math.max(
-                  (scratchValue ?? 0) - 9,
+                  (scratchValue ?? 0) - boxesScratched,
                   0
                 );
-
-                // Update state and sessionStorage
                 dispatch(
                   updateUserScratchValue({
                     newScratchValue: updatedScratchValue,
@@ -273,9 +285,33 @@ const ScratchGame: React.FC = () => {
                   updatedScratchValue.toString()
                 );
 
+                // Check if there's a winner immediately
+                const prizeCounts: { [key: string]: number } = {};
+                for (const prize of prizes) {
+                  prizeCounts[prize] = (prizeCounts[prize] || 0) + 1;
+                }
+
+                let winner = null;
+                for (const [prize, count] of Object.entries(prizeCounts)) {
+                  if (count >= 3) {
+                    winner = prize;
+                    break;
+                  }
+                }
+
+                if (winner) {
+                  setWinningPrize(winner);
+                  setMessage(`You have won ${winner}!`);
+                  setShowConfetti(true);
+                } else {
+                  setMessage("Try again!");
+                }
+
+                setGameEnded(true);
                 setTimeout(() => {
                   resetGame();
                 }, 3000);
+
                 return;
               }
 
