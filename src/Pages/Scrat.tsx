@@ -184,9 +184,11 @@ const ScratchGame: React.FC = () => {
       if (scratchCount === 0 && !hasPlayed && !gameEnded) {
         playScratchGame();
       }
+      // console.log(setScratchCount((el) => {console.log(el)}))
       setScratchCount((prev) => prev + 1);
     }
   };
+
 
   return (
     <div className="">
