@@ -1,4 +1,10 @@
-import React, { useRef, useState, MouseEvent, TouchEvent, useLayoutEffect } from "react";
+import React, {
+  useRef,
+  useState,
+  MouseEvent,
+  TouchEvent,
+  useLayoutEffect,
+} from "react";
 
 interface ScratchCardProps {
   image: string;
@@ -7,6 +13,7 @@ interface ScratchCardProps {
   isRevealed: boolean;
   onReveal: (prize: string, index: number) => void;
   index: number;
+  scratchValue: number;
 }
 
 const ScratchCard: React.FC<ScratchCardProps> = ({
@@ -16,10 +23,11 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
   isRevealed,
   onReveal,
   index,
+  scratchValue,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const hasBeenRevealed = useRef(false); // Use ref to track reveal status
+  const hasBeenRevealed = useRef(false);
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
@@ -28,7 +36,6 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
     const context = canvas.getContext("2d");
     if (!context) return;
 
-    // Set canvas dimensions explicitly
     canvas.width = canvas.offsetWidth;
     canvas.height = canvas.offsetHeight;
 
@@ -37,15 +44,14 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
     };
 
     if (isRevealed) {
-      clearCanvas(); // Clear the canvas when isRevealed is true
+      clearCanvas();
       if (!hasBeenRevealed.current) {
         hasBeenRevealed.current = true;
-        onReveal(prize, index); // Ensure onReveal runs once
+        onReveal(prize, index);
       }
     } else {
-      // Load and draw the glitter image
       const topLayer = new Image();
-      topLayer.src = `${image}?cache=${Date.now()}`; // Cache bust for fresh load
+      topLayer.src = `${image}?cache=${Date.now()}`;
       topLayer.onload = () => {
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.drawImage(topLayer, 0, 0, canvas.width, canvas.height);
@@ -56,9 +62,8 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
     }
   }, [image, isRevealed]);
 
-  // Function to calculate scratch percentage
   const calculateScratchPercentage = () => {
-    if (hasBeenRevealed.current) return; // Prevent multiple calls
+    if (hasBeenRevealed.current) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -76,22 +81,17 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
 
     const percent = (transparentPixels / totalPixels) * 100;
 
-    // if (percent >= 50) {
-    //   context.clearRect(0, 0, canvas.width, canvas.height);
-    //   hasBeenRevealed.current = true; // Update ref immediately
-    //   onReveal(prize, index); // Call once when 50% is scratched
-    // }
-
     if (percent >= 50) {
       context.clearRect(0, 0, canvas.width, canvas.height);
-      hasBeenRevealed.current = true; 
-      onReveal(prize, index); 
+      hasBeenRevealed.current = true;
+      onReveal(prize, index);
     }
-    
   };
 
-  const scratch = (event: MouseEvent<HTMLCanvasElement> | TouchEvent<HTMLCanvasElement>) => {
-    if (!isDrawing || !canvasRef.current) return;
+  const scratch = (
+    event: MouseEvent<HTMLCanvasElement> | TouchEvent<HTMLCanvasElement>
+  ) => {
+    if (!isDrawing || !canvasRef.current || scratchValue <= 0) return;
 
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
@@ -118,25 +118,32 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
     calculateScratchPercentage();
   };
 
+  const handleStartScratch = () => {
+    if (scratchValue > 0) {
+      setIsDrawing(true);
+    }
+  };
+
   return (
     <div className="relative w-full h-full">
       {/* Prize text */}
       <div className="absolute inset-0 flex items-center justify-center text-black font-bold bg-[#C4C4C4] rounded-[10px]">
-      {isRevealed ? prize : '*****'}
+        {isRevealed ? prize : "*****"}
       </div>
+
       {/* Canvas */}
       <canvas
         ref={canvasRef}
         className="absolute inset-0 w-full h-full"
-        onMouseDown={() => setIsDrawing(true)}
+        onMouseDown={handleStartScratch}
         onMouseUp={() => setIsDrawing(false)}
         onMouseOut={() => setIsDrawing(false)}
         onMouseMove={scratch}
-        onTouchStart={() => setIsDrawing(true)}
+        onTouchStart={handleStartScratch}
         onTouchEnd={() => setIsDrawing(false)}
         onTouchCancel={() => setIsDrawing(false)}
         onTouchMove={scratch}
-        style={{ cursor: "crosshair" }}
+        style={{ cursor: scratchValue > 0 ? "crosshair" : "not-allowed" }}
       />
     </div>
   );

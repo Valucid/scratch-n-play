@@ -7,16 +7,24 @@ import { useWindowSize } from "react-use";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
   fetchUserScratchValue,
+  getWinningPrize,
   updateUserScratchValue,
   // getWinningPrize,
 } from "../redux/slices/scratchSlice/action";
+import Preloader from "../components/Preloader";
 
 const ScratchGame: React.FC = () => {
   const dispatch = useAppDispatch();
   const {
     scratches: { data: scratchValue },
-    prize: { data: winningPrice },
+    prize: { data: winningPrice, loading },
   } = useAppSelector((state) => state.scratches);
+
+
+  useEffect(() => {
+    dispatch(getWinningPrize())
+  }, [])
+
   const generateRandomPrizes = async () => {
     const possiblePrizes = [100, 200, 500, 1000, 2000, 5000];
     const prizeCounts: { [key: string]: number } = {};
@@ -186,18 +194,24 @@ const ScratchGame: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [gameEnded]);
+  
+  // console.log({ revealedIndexes });
 
-  console.log({ revealedIndexes });
-
-  console.log({
-    scratchValue,
-    revealedIndexes: revealedIndexes.length,
-    scratchCount: scratchValue ?? 0 - revealedIndexes.length,
-  });
+  // console.log({
+  //   scratchValue,
+  //   revealedIndexes: revealedIndexes.length,
+  //   scratchCount: scratchValue ?? 0 - revealedIndexes.length,
+  // });
 
   return (
+    
     <div className="">
-      {showConfetti && (
+
+      <>
+      {
+        loading === true ? (<Preloader />): (
+          <>
+          {showConfetti && (
         <Confetti width={width} height={height} recycle={false} />
       )}
 
@@ -230,6 +244,7 @@ const ScratchGame: React.FC = () => {
                 >
                   <ScratchCard
                     image="/images/glitters.svg"
+                    scratchValue={scratchValue as number}
                     brushSize={15}
                     prize={prize}
                     isRevealed={revealedIndexes.includes(index)}
@@ -257,6 +272,7 @@ const ScratchGame: React.FC = () => {
           </div> */}
 
           <button
+          
             onClick={() => {
               if (gameEnded) {
                 setTimeout(() => resetGame(), 3000);
@@ -328,6 +344,11 @@ const ScratchGame: React.FC = () => {
           </button>
         </div>
       </div>
+          </>
+        )
+      }
+      </>
+      
     </div>
   );
 };
