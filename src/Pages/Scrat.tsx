@@ -232,6 +232,7 @@ const ScratchGame: React.FC = () => {
                     onReveal={handleReveal}
                     index={index}
                     aria-label={`Scratch card ${index + 1}`}
+                    scratchValue={scratchCount}
                   />
                 </div>
               ))}
