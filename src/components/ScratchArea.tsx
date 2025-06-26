@@ -14,6 +14,7 @@ interface ScratchCardProps {
   onReveal: (prize: string, index: number) => void;
   index: number;
   scratchValue: number;
+  gameEnd: boolean;
 }
 
 const ScratchCard: React.FC<ScratchCardProps> = ({
@@ -24,6 +25,7 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
   onReveal,
   index,
   scratchValue,
+  gameEnd,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -91,7 +93,7 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
   const scratch = (
     event: MouseEvent<HTMLCanvasElement> | TouchEvent<HTMLCanvasElement>
   ) => {
-    if (!isDrawing || !canvasRef.current || scratchValue <= 0) return;
+    if (!isDrawing || !canvasRef.current || scratchValue <= 0 || gameEnd === true) return;
 
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
@@ -119,7 +121,7 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
   };
 
   const handleStartScratch = () => {
-    if (scratchValue > 0) {
+    if (scratchValue > 0 || !gameEnd) {
       setIsDrawing(true);
     }
   };
@@ -143,7 +145,7 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
         onTouchEnd={() => setIsDrawing(false)}
         onTouchCancel={() => setIsDrawing(false)}
         onTouchMove={scratch}
-        style={{ cursor: scratchValue > 0 ? "crosshair" : "not-allowed" }}
+        style={{ cursor: scratchValue > 0 || gameEnd === true ? "crosshair" : "not-allowed" }}
       />
     </div>
   );

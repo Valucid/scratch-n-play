@@ -233,6 +233,7 @@ const ScratchGame: React.FC = () => {
                     index={index}
                     aria-label={`Scratch card ${index + 1}`}
                     scratchValue={scratchCount}
+                    gameEnd={gameEnded}
                   />
                 </div>
               ))}
