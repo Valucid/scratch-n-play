@@ -89,7 +89,7 @@ const ScratchGame: React.FC = () => {
 //use effect when scratchValue is 0
 
 useEffect(() => {
-  if (scratchValue === 0) {
+  if (scratchValue && scratchValue === 0) {
     setMessage(
       "You have 0 scratches left! To scratch more, text PLAY to 20444."
     );
@@ -176,14 +176,6 @@ useEffect(() => {
       return newRevealedPrizes;
     });
   };
-
-  console.log({
-    scratchValue,
-    revealedIndexes: revealedIndexes.length,
-    prizes,
-    winningPrice,
-    gameEnded,
-  }, 'checking')
 
   return (
     <div className="">
