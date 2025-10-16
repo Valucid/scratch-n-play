@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import storage from 'redux-persist/es/storage';
-import { loginUser } from './action';
+import { loginUser, smsLoginUser } from './action';
 import { IAuthState } from '../../common';
 
 const initialState: IAuthState = {
@@ -41,6 +41,22 @@ export const authSlice = createSlice({
         state.data = action.payload.data;
       })
       .addCase(loginUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+        state.isLoggedIn = false;
+        state.data = null;
+      });
+
+          builder
+      .addCase(smsLoginUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(smsLoginUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isLoggedIn = true;
+        state.data = action.payload.data;
+      })
+      .addCase(smsLoginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
         state.isLoggedIn = false;
