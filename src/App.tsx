@@ -14,6 +14,7 @@ import Login from "./Pages/Login";
 import Terms from "./Pages/Terms";
 import { useAppSelector } from "./redux/hooks";
 import Preloader from "./components/Preloader";
+import SmsLogin from "./Pages/SmsLogin";
 
 const ScratchGame = lazy(() => import("./Pages/ScratchGame"));
 
@@ -46,6 +47,7 @@ const App: React.FC = () => {
           <Route path="/terms" element={<Terms />} />
         </Route>
         <Route path="/login" element={<Login />} />
+        <Route path="/smsLogin" element={<SmsLogin />} />
       </Routes>
     </Router>
   );

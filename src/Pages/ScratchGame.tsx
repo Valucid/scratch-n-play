@@ -87,7 +87,6 @@ const ScratchGame: React.FC = () => {
 }, [prizeLoading, prizeListLoading, prizeList, winningPrice]);
 
 //use effect when scratchValue is 0
-
 useEffect(() => {
   if (scratchValue && scratchValue === 0) {
     setMessage(
