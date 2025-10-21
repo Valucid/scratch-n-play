@@ -76,15 +76,19 @@ const ScratchGame: React.FC = () => {
 };
 
 
- useEffect(() => {
+useEffect(() => {
   if (!prizeLoading && !prizeListLoading && prizeList?.length && winningPrice) {
     const randomPrizes = generateRandomPrizes(
       prizeList.map((item: any) => item.prizeValue),
       winningPrice
     );
+
+    // Rearrange prizes to make sure the winning combination appears together
+
     setPrizes(randomPrizes);
   }
 }, [prizeLoading, prizeListLoading, prizeList, winningPrice]);
+
 
 //use effect when scratchValue is 0
 useEffect(() => {
@@ -96,18 +100,60 @@ useEffect(() => {
   }
 }, [scratchValue]);
 
+type Prize = string; // e.g., "₦1000", "₦5000", etc.
 
-  const resetGame = () => {
-    setIsRevealed(false);
-    setRevealedPrizes([]);
-    setWinningPrize(null);
-    setMessage("");
-    setGameEnded(false);
-    setShowModal(false);
-    setShowConfetti(false);
-    setRevealedIndexes([]); // Reset revealed indexes
-    setGameId((prevGameId) => prevGameId + 1); // Force re-render of ScratchCards
-  };
+const resetGame = () => {
+  setIsRevealed(false);
+  setRevealedPrizes([]);
+  setWinningPrize(null);
+  setMessage("");
+  setGameEnded(false);
+  setShowModal(false);
+  setShowConfetti(false);
+  setRevealedIndexes([]); // Reset revealed indexes
+
+  // --- Rearrange the prizes here ---
+  const winningPrize = prizes.find((p: Prize, _: number, arr: Prize[]) =>
+    arr.filter((x: Prize) => x === p).length >= 3
+  );
+
+  let newPrizes: Prize[] = [];
+
+  if (winningPrize) {
+    // Pick 3 random unique indexes for the winning prize
+    const randomIndexes = Array.from({ length: 9 }, (_, i) => i)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3);
+
+    // Create a new array with 3 winning prizes placed randomly
+    newPrizes = Array(9).fill(null) as Prize[];
+    randomIndexes.forEach((i) => {
+      newPrizes[i] = winningPrize;
+    });
+
+    // Fill remaining slots with random prizes (non-winning)
+    const otherPrizes = prizeList
+      .map((p: any) => `₦${p.prizeValue}`)
+      .filter((p: Prize) => p !== winningPrize);
+
+    for (let i = 0; i < 9; i++) {
+      if (!newPrizes[i]) {
+        newPrizes[i] =
+          otherPrizes[Math.floor(Math.random() * otherPrizes.length)];
+      }
+    }
+  } else {
+    // If no previous win, just randomize all prizes
+    newPrizes = [...prizes].sort(() => Math.random() - 0.5);
+  }
+
+  // Update prizes for the new game round
+  setPrizes(newPrizes);
+
+  // Force re-render of ScratchCards
+  setGameId((prevGameId) => prevGameId + 1);
+};
+
 
  const handleReveal = (prize: string, index: number) => {
     if (revealedIndexes.includes(index)) return; // Prevent duplicate reveals
@@ -149,6 +195,8 @@ useEffect(() => {
         setShowModal(true);
         setGameEnded(true);
         setShowConfetti(true);
+
+        // rearrange prizes here
 
         // Optionally, you can dispatch an action to create a winner record
         winningPrizeValue?.replace("₦", "");
@@ -264,7 +312,7 @@ useEffect(() => {
                         0
                       );
 
-                      console.log({updatedScratchValue}, 'updated scratch value')
+                      // console.log({updatedScratchValue}, 'updated scratch value')
                       dispatch(
                         updateUserScratchValue({
                           newScratchValue: updatedScratchValue,
