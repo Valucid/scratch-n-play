@@ -7,7 +7,7 @@ const getToken = (name: string) => sessionStorage.getItem(name);
 let logOutTimer: any;
 
 const axiosInstance = axios.create({
-  baseURL: ApiUrl.LOCAL_URL,
+  baseURL: ApiUrl.BACKEND_URL,
   withCredentials: false,
   headers: {
     "Content-Type": "application/json"
