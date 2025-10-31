@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import { block, ScratchBlockType } from "../../common";
 import {
   fetchUserScratchValue,
+  getGeneratedPrizeList,
   getPrizeList,
   getWinnersList,
   getWinningPrize,
@@ -14,6 +15,7 @@ interface IScratchState {
   prizeList: ScratchBlockType<any>;
   winners: ScratchBlockType<any>;
   winnersList: ScratchBlockType<any>;
+  generatedPrizes: ScratchBlockType<string[]>;
 }
 
 const initialState: IScratchState = {
@@ -22,6 +24,7 @@ const initialState: IScratchState = {
   prizeList: { ...block },
   winners: { ...block },
   winnersList: { ...block },
+  generatedPrizes: {...block},
 };
 
 const scratchSlice = createSlice({
@@ -98,6 +101,17 @@ const scratchSlice = createSlice({
         state.winnersList.loading = false;
         state.winnersList.error = action.error.message;
       });
+
+      builder.addCase(getGeneratedPrizeList.pending, (state) => {
+        state.generatedPrizes.loading = true;
+      }).addCase(getGeneratedPrizeList.fulfilled, (state, action) => {
+        state.generatedPrizes.loading = false;
+        state.generatedPrizes.data = action.payload.data;
+        state.generatedPrizes.success = true;
+      }).addCase(getGeneratedPrizeList.rejected, (state, action) => {
+        state.generatedPrizes.loading = false;
+        state.generatedPrizes.error = action.error.message;
+      })
   },
 });
 

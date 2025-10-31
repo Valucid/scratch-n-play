@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import ScratchCard from "../components/ScratchArea";
 import Confetti from "react-confetti";
 import { useWindowSize } from "react-use";
@@ -10,6 +10,7 @@ import {
   getPrizeList,
   createWinners,
   getWinnersList,
+  getGeneratedPrizeList,
 } from "../redux/slices/scratchSlice/action";
 import Preloader from "../components/Preloader";
 
@@ -18,8 +19,9 @@ const ScratchGame: React.FC = () => {
   const {
     scratches: { data: scratchValue },
     prize: { data: winningPrice, loading: prizeLoading },
-    prizeList: { data: prizeList, loading: prizeListLoading },
-    winnersList: { data: winnersValue },
+    prizeList: { data: prizeList = [], loading: prizeListLoading },
+    // winnersList: { data: winnersValue },
+    generatedPrizes: { data: generatedPrizeList },
   } = useAppSelector((state) => state.scratches);
 
   const [prizes, setPrizes] = useState<string[]>([]);
@@ -43,85 +45,12 @@ const ScratchGame: React.FC = () => {
     ]);
   }, [dispatch]);
 
-  // generate random prices with winning price
-  const generateRandomPrizes = (prizesList: string[], winningPrice: string) => {
-    const winningPrize = prizesList.find((prize) =>
-      prize.includes(winningPrice)
-    );
-    const randomPrizes: string[] = [];
-
-    if (winningPrize) {
-      for (let i = 0; i < 3; i++) {
-        randomPrizes.push(`₦${winningPrize}`);
-      }
-
-      const otherPrizes = prizesList.filter((prize) => prize !== winningPrize);
-
-      while (randomPrizes.length < 9) {
-        const randomPrize =
-          otherPrizes[Math.floor(Math.random() * otherPrizes.length)];
-        randomPrizes.push(`₦${randomPrize}`);
-      }
-
-      for (let i = randomPrizes.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [randomPrizes[i], randomPrizes[j]] = [randomPrizes[j], randomPrizes[i]];
-      }
-    }
-
-    return randomPrizes;
-  };
-
-  // generate random prizes without the winning price
-  const generateRandomPrizes2 = (prizesList: string[]) => {
-    const maxLength = 9;
-    const pairCount = Math.floor(maxLength / 2);
-
-    const shuffledPrizes = [...prizesList].sort(() => Math.random() - 0.5);
-
-    const selectedPairPrizes = shuffledPrizes.slice(0, pairCount);
-
-    // Duplicate each of these exactly twice
-    const randomPrizes: string[] = selectedPairPrizes.flatMap((prize) => [
-      `₦${prize}`,
-      `₦${prize}`,
-    ]);
-
-    const remainingPrizes = shuffledPrizes.filter(
-      (prize) => !selectedPairPrizes.includes(prize)
-    );
-
-    if (remainingPrizes.length > 0) {
-      const extraPrize =
-        remainingPrizes[Math.floor(Math.random() * remainingPrizes.length)];
-      randomPrizes.push(`₦${extraPrize}`);
-    } else {
-      // Generate a random amount not in the original list
-      let extraAmount: number;
-      const existingAmounts = prizesList.map(Number);
-
-      do {
-        extraAmount = Math.floor(Math.random() * 900 + 100) * 10;
-      } while (existingAmounts.includes(extraAmount));
-
-      randomPrizes.push(`₦${extraAmount}`);
-    }
-
-    // Final shuffle (Fisher-Yates)
-    for (let i = randomPrizes.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [randomPrizes[i], randomPrizes[j]] = [randomPrizes[j], randomPrizes[i]];
-    }
-
-    return randomPrizes;
-  };
-
-  const generatePrizes = () => {
-    const list = prizeList.map((item: any) => item.prizeValue);
-    return winnersValue?.isTwentywinners
-      ? generateRandomPrizes2(list)
-      : generateRandomPrizes(list, winningPrice);
-  };
+  // const generatePrizes = () => {
+  //   const list = prizeList.map((item: any) => item.prizeValue);
+  //   return winnersValue?.isTwentywinners
+  //     ? generateRandomPrizes2(list)
+  //     : generateRandomPrizes(list, winningPrice);
+  // }
 
   useEffect(() => {
     if (
@@ -130,15 +59,17 @@ const ScratchGame: React.FC = () => {
       prizeList?.length &&
       winningPrice
     ) {
-      const randomPrizes = generatePrizes();
-      setPrizes(randomPrizes);
+      const list = prizeList.map((item: any) => item.prizeValue);
+      dispatch(getGeneratedPrizeList({ prizeList: list, winningPrice }));
+
+      setPrizes(generatedPrizeList as string[]);
     }
   }, [
     prizeLoading,
     prizeListLoading,
     prizeList,
     winningPrice,
-    winnersValue?.isTwentywinners,
+    // winnersValue?.isTwentywinners,
   ]);
 
   useEffect(() => {
@@ -154,9 +85,17 @@ const ScratchGame: React.FC = () => {
     dispatch(getWinnersList());
   }, [dispatch]);
 
-  type Prize = string;
+  useEffect(() => {
+    if (
+      generatedPrizeList &&
+      Array.isArray(generatedPrizeList) &&
+      generatedPrizeList.length > 0
+    ) {
+      setPrizes(generatedPrizeList);
+    }
+  }, [generatedPrizeList]);
 
-  const resetGame = () => {
+  const resetGame = useCallback(() => {
     setIsRevealed(false);
     setRevealedPrizes([]);
     setWinningPrize(null);
@@ -165,42 +104,15 @@ const ScratchGame: React.FC = () => {
     setShowModal(false);
     setShowConfetti(false);
     setRevealedIndexes([]);
-
-    const winningPrize = prizes.find(
-      (p: Prize, _: number, arr: Prize[]) =>
-        arr.filter((x: Prize) => x === p).length >= 3
-    );
-
-    let newPrizes: Prize[] = [];
-
-    if (winningPrize) {
-      const randomIndexes = Array.from({ length: 9 }, (_, i) => i)
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3);
-
-      newPrizes = Array(9).fill(null) as Prize[];
-      randomIndexes.forEach((i) => {
-        newPrizes[i] = winningPrize;
-      });
-
-      const otherPrizes = prizeList
-        .map((p: any) => `₦${p.prizeValue}`)
-        .filter((p: Prize) => p !== winningPrize);
-
-      for (let i = 0; i < 9; i++) {
-        if (!newPrizes[i]) {
-          newPrizes[i] =
-            otherPrizes[Math.floor(Math.random() * otherPrizes.length)];
-        }
-      }
-    } else {
-      newPrizes = [...prizes].sort(() => Math.random() - 0.5);
-    }
-
-    setPrizes(newPrizes);
-
     setGameId((prevGameId) => prevGameId + 1);
-  };
+
+    if (prizeList.length && winningPrice) {
+      console.log('if statement')
+      const list = prizeList.map((item: any) => item.prizeValue);
+      dispatch(getGeneratedPrizeList({ prizeList: list, winningPrice }));
+    }
+  }, [dispatch, prizeList, winningPrice]);
+
 
   const handleReveal = (prize: string, index: number) => {
     if (revealedIndexes.includes(index)) return;
@@ -233,7 +145,6 @@ const ScratchGame: React.FC = () => {
 
       if (winner && !gameEnded) {
         setWinningPrize(winner);
-        setMessage(`You have won ${winner}!`);
         setShowModal(true);
         setGameEnded(true);
         setShowConfetti(true);
@@ -241,6 +152,8 @@ const ScratchGame: React.FC = () => {
         const winningPrizeData = prizeList.find(
           (item: any) => item.prizeValue === winner.replace("₦", "")
         );
+
+        setMessage(`You have won ${winningPrizeData.prizeCategory} ${winner}!`);
 
         if (winningPrizeData) {
           dispatch(
@@ -286,23 +199,24 @@ const ScratchGame: React.FC = () => {
 
               <div>
                 <div className="grid grid-cols-3 gap-2 max-w-[701px] mx-auto bg-gradient-to-b px-5 py-4 rounded-[28px] place-items-center">
-                  {prizes.map((prize, index) => (
-                    <div
-                      key={`${gameId}-${index}`}
-                      className="w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] lg:w-[200px] lg:h-[200px]"
-                    >
-                      <ScratchCard
-                        image="/images/glitters.svg"
-                        scratchValue={scratchValue as number}
-                        brushSize={15}
-                        prize={prize}
-                        isRevealed={revealedIndexes.includes(index)}
-                        onReveal={() => handleReveal(prize, index)}
-                        index={index}
-                        gameEnd={gameEnded}
-                      />
-                    </div>
-                  ))}
+                  {prizes &&
+                    prizes?.map((prize, index) => (
+                      <div
+                        key={`${gameId}-${index}`}
+                        className="w-[100px] h-[100px] sm:w-[130px] sm:h-[130px] lg:w-[200px] lg:h-[200px]"
+                      >
+                        <ScratchCard
+                          image="/images/glitters.svg"
+                          scratchValue={scratchValue as number}
+                          brushSize={15}
+                          prize={prize}
+                          isRevealed={revealedIndexes.includes(index)}
+                          onReveal={() => handleReveal(prize, index)}
+                          index={index}
+                          gameEnd={gameEnded}
+                        />
+                      </div>
+                    ))}
                 </div>
 
                 {showModal && (

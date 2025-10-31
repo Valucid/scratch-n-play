@@ -1,5 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../../../api/axiosinstance";
+import { ScratchRequestObj } from "./type";
 
 export const fetchUserScratchValue = createAsyncThunk(
   "user/fetchUserScratches",
@@ -94,9 +95,29 @@ export const getWinnersList = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     const msisdn = sessionStorage.getItem("msisdn");
 
-    console.log('getWinnersList')
+    // console.log('getWinnersList')
     try {
       const response = await axiosInstance.get(`users/${msisdn}/winnersList`);
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const getGeneratedPrizeList = createAsyncThunk(
+  "user/getGeneratedPrizeList",
+  async (
+    { prizeList, winningPrice }: ScratchRequestObj,
+    { rejectWithValue }
+  ) => {
+    const msisdn = sessionStorage.getItem("msisdn");
+
+    try {
+      const response = await axiosInstance.get(
+        `users/${msisdn}/randomPrizeList?prizesList=${prizeList}&winningPrice=${winningPrice}`
+      );
 
       return response.data;
     } catch (error) {
