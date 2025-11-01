@@ -73,12 +73,15 @@ const ScratchGame: React.FC = () => {
   ]);
 
   useEffect(() => {
-    if (scratchValue === 0) {
+    if (typeof scratchValue === "number" && scratchValue === 0) {
+      console.log(123);
       setMessage(
         "You have 0 scratches left! To scratch more, text PLAY to 20444."
       );
       setShowModal(true);
     }
+
+    console.log(scratchValue, "scratchValue use Effect");
   }, [scratchValue]);
 
   useEffect(() => {
@@ -107,12 +110,11 @@ const ScratchGame: React.FC = () => {
     setGameId((prevGameId) => prevGameId + 1);
 
     if (prizeList.length && winningPrice) {
-      console.log('if statement')
+      // console.log('if statement')
       const list = prizeList.map((item: any) => item.prizeValue);
       dispatch(getGeneratedPrizeList({ prizeList: list, winningPrice }));
     }
   }, [dispatch, prizeList, winningPrice]);
-
 
   const handleReveal = (prize: string, index: number) => {
     if (revealedIndexes.includes(index)) return;
@@ -124,8 +126,10 @@ const ScratchGame: React.FC = () => {
       dispatch(
         updateUserScratchValue({ newScratchValue: updatedScratchValue })
       );
-      sessionStorage.setItem("scratchValue", updatedScratchValue.toString());
+      // sessionStorage.setItem("scratchValue", updatedScratchValue.toString());
     }
+
+    console.log({ scratchValue }, "scratchValue");
 
     setRevealedPrizes((prevRevealedPrizes) => {
       const newRevealedPrizes = [...prevRevealedPrizes, prize];
@@ -254,10 +258,10 @@ const ScratchGame: React.FC = () => {
                         newScratchValue: updatedScratchValue,
                       })
                     );
-                    sessionStorage.setItem(
-                      "scratchValue",
-                      updatedScratchValue.toString()
-                    );
+                    // sessionStorage.setItem(
+                    //   "scratchValue",
+                    //   updatedScratchValue.toString()
+                    // );
 
                     const prizeCounts: Record<string, number> = {};
                     for (const prize of prizes) {
@@ -285,7 +289,7 @@ const ScratchGame: React.FC = () => {
                     return;
                   }
 
-                  if (scratchValue === 0) {
+                  if (typeof scratchValue === "number" && scratchValue === 0) {
                     setMessage(
                       "You have 0 scratches left! To scratch more, text PLAY to 20444."
                     );

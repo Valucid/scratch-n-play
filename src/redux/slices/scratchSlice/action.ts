@@ -41,7 +41,7 @@ export const updateUserScratchValue = createAsyncThunk(
     { rejectWithValue }
   ) => {
     const msisdn = sessionStorage.getItem("msisdn");
-    console.log({ newScratchValue }, "newScratchValue");
+    // console.log({ newScratchValue }, "newScratchValue");
     try {
       const response = await axiosInstance.patch(
         `users/${msisdn}/update-scratch`,
