@@ -93,7 +93,13 @@ const ScratchCard: React.FC<ScratchCardProps> = ({
   const scratch = (
     event: MouseEvent<HTMLCanvasElement> | TouchEvent<HTMLCanvasElement>
   ) => {
-    if (!isDrawing || !canvasRef.current || scratchValue <= 0 || gameEnd === true) return;
+    if (
+  !isDrawing ||
+  !canvasRef.current ||
+  (typeof scratchValue !== 'number' || scratchValue <= 0) ||
+  gameEnd === true
+) return;
+
 
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
