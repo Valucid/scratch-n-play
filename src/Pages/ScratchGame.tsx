@@ -59,6 +59,7 @@ const ScratchGame: React.FC = () => {
       prizeList?.length &&
       winningPrice
     ) {
+      console.log("am i being called????");
       const list = prizeList.map((item: any) => item.prizeValue);
       dispatch(getGeneratedPrizeList({ prizeList: list, winningPrice }));
 
@@ -73,15 +74,16 @@ const ScratchGame: React.FC = () => {
   ]);
 
   useEffect(() => {
-    if (typeof scratchValue === "number" && scratchValue === 0) {
-      console.log(123);
+    if (
+      scratchValue === 0 ||
+      scratchValue === undefined ||
+      scratchValue === null
+    ) {
       setMessage(
         "You have 0 scratches left! To scratch more, text PLAY to 20444."
       );
       setShowModal(true);
     }
-
-    console.log(scratchValue, "scratchValue use Effect");
   }, [scratchValue]);
 
   useEffect(() => {
@@ -89,6 +91,7 @@ const ScratchGame: React.FC = () => {
   }, [dispatch]);
 
   useEffect(() => {
+    // console.log("am i being called?");
     if (
       generatedPrizeList &&
       Array.isArray(generatedPrizeList) &&
@@ -117,6 +120,15 @@ const ScratchGame: React.FC = () => {
   }, [dispatch, prizeList, winningPrice]);
 
   const handleReveal = (prize: string, index: number) => {
+    // ❌ Prevent scratching when scratchValue is undefined or 0
+    if (!scratchValue || scratchValue <= 0) {
+      setMessage(
+        "You have 0 scratches left! To scratch more, text PLAY to 20444."
+      );
+      setShowModal(true);
+      return;
+    }
+
     if (revealedIndexes.includes(index)) return;
 
     setRevealedIndexes((prev) => [...prev, index]);
@@ -126,10 +138,7 @@ const ScratchGame: React.FC = () => {
       dispatch(
         updateUserScratchValue({ newScratchValue: updatedScratchValue })
       );
-      // sessionStorage.setItem("scratchValue", updatedScratchValue.toString());
     }
-
-    console.log({ scratchValue }, "scratchValue");
 
     setRevealedPrizes((prevRevealedPrizes) => {
       const newRevealedPrizes = [...prevRevealedPrizes, prize];
@@ -215,7 +224,16 @@ const ScratchGame: React.FC = () => {
                           brushSize={15}
                           prize={prize}
                           isRevealed={revealedIndexes.includes(index)}
-                          onReveal={() => handleReveal(prize, index)}
+                          onReveal={() => {
+                            if (scratchValue && scratchValue > 0)
+                              handleReveal(prize, index);
+                            else {
+                              setMessage(
+                                "You have 0 scratches left! To scratch more, text PLAY to 20444."
+                              );
+                              setShowModal(true);
+                            }
+                          }}
                           index={index}
                           gameEnd={gameEnded}
                         />

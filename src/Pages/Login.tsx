@@ -10,6 +10,8 @@ import { resetError } from "../redux/slices/authSlice";
 const Login: React.FC = () => {
   const dispatch = useAppDispatch();
   let { loading, error: netWorkError } = useAppSelector((state) => state.auth);
+
+  // console.log({loading})
   const [value, setValue] = useState<string>();
   // const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
