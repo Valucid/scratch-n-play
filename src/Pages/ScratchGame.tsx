@@ -73,18 +73,19 @@ const ScratchGame: React.FC = () => {
     // winnersValue?.isTwentywinners,
   ]);
 
-  useEffect(() => {
-    if (
-      scratchValue === 0 ||
-      scratchValue === undefined ||
-      scratchValue === null
-    ) {
-      setMessage(
-        "You have 0 scratches left! To scratch more, text PLAY to 20444."
-      );
-      setShowModal(true);
-    }
-  }, [scratchValue]);
+useEffect(() => {
+  if (scratchValue === undefined || scratchValue === null) return;
+
+  if (scratchValue <= 0) {
+    setMessage("You have 0 scratches left! To scratch more, text PLAY to 20444.");
+    setShowModal(true);
+  } else {
+    // 👇 hide modal when user has scratches available
+    setShowModal(false);
+    setMessage("");
+  }
+}, [scratchValue]);
+
 
   useEffect(() => {
     dispatch(getWinnersList());
@@ -123,7 +124,7 @@ const ScratchGame: React.FC = () => {
     // ❌ Prevent scratching when scratchValue is undefined or 0
     if (!scratchValue || scratchValue <= 0) {
       setMessage(
-        "You have 0 scratches left! To scratch more, text PLAY to 20444."
+        "You have 0 scratches left! To scratch more, text PLAY to 20444xxxx."
       );
       setShowModal(true);
       return;
@@ -229,7 +230,7 @@ const ScratchGame: React.FC = () => {
                               handleReveal(prize, index);
                             else {
                               setMessage(
-                                "You have 0 scratches left! To scratch more, text PLAY to 20444."
+                                "You have 0 scratches left! To scratch more, text PLAY to 20444yyyy."
                               );
                               setShowModal(true);
                             }
@@ -309,7 +310,7 @@ const ScratchGame: React.FC = () => {
 
                   if (typeof scratchValue === "number" && scratchValue === 0) {
                     setMessage(
-                      "You have 0 scratches left! To scratch more, text PLAY to 20444."
+                      "You have 0 scratches left! To scratch more, text PLAY to 20444vvvv."
                     );
                     setShowModal(true);
                   }

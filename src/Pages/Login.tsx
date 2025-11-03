@@ -24,7 +24,7 @@ const Login: React.FC = () => {
     if (netWorkError) {
       setSubscriptionMessage(netWorkError);
       setShowSubscriptionModal(true);
-      dispatch(resetError())
+      dispatch(resetError());
     }
   }, [netWorkError]);
 
@@ -39,15 +39,13 @@ const Login: React.FC = () => {
 
     const response = await dispatch(loginUser({ msisdn }));
 
-    if (response.payload.status === 200) navigate('/scratch-game')
-   
+    if (response.payload.status === 200) navigate("/scratch-game");
   };
 
   const handleSubscribe = () => {
     window.location.href = "sms:20444?body=SP";
     setShowSubscriptionModal(false);
   };
-
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-red-600 bg-cover font-inria px-4">
