@@ -59,7 +59,6 @@ const ScratchGame: React.FC = () => {
       prizeList?.length &&
       winningPrice
     ) {
-      console.log("am i being called????");
       const list = prizeList.map((item: any) => item.prizeValue);
       dispatch(getGeneratedPrizeList({ prizeList: list, winningPrice }));
 
@@ -124,7 +123,7 @@ useEffect(() => {
     // ❌ Prevent scratching when scratchValue is undefined or 0
     if (!scratchValue || scratchValue <= 0) {
       setMessage(
-        "You have 0 scratches left! To scratch more, text PLAY to 20444xxxx."
+        "You have 0 scratches left! To scratch more, text PLAY to 20444."
       );
       setShowModal(true);
       return;
@@ -230,7 +229,7 @@ useEffect(() => {
                               handleReveal(prize, index);
                             else {
                               setMessage(
-                                "You have 0 scratches left! To scratch more, text PLAY to 20444yyyy."
+                                "You have 0 scratches left! To scratch more, text PLAY to 20444."
                               );
                               setShowModal(true);
                             }
@@ -310,7 +309,7 @@ useEffect(() => {
 
                   if (typeof scratchValue === "number" && scratchValue === 0) {
                     setMessage(
-                      "You have 0 scratches left! To scratch more, text PLAY to 20444vvvv."
+                      "You have 0 scratches left! To scratch more, text PLAY to 20444."
                     );
                     setShowModal(true);
                   }
