@@ -72,19 +72,20 @@ const ScratchGame: React.FC = () => {
     // winnersValue?.isTwentywinners,
   ]);
 
-useEffect(() => {
-  if (scratchValue === undefined || scratchValue === null) return;
+  useEffect(() => {
+    if (scratchValue === undefined || scratchValue === null) return;
 
-  if (scratchValue <= 0) {
-    setMessage("You have 0 scratches left! To scratch more, text PLAY to 20444.");
-    setShowModal(true);
-  } else {
-    // 👇 hide modal when user has scratches available
-    setShowModal(false);
-    setMessage("");
-  }
-}, [scratchValue]);
-
+    if (scratchValue <= 0) {
+      setMessage(
+        "You have 0 scratches left! To scratch more, text PLAY to 20444.",
+      );
+      setShowModal(true);
+    } else {
+      // 👇 hide modal when user has scratches available
+      setShowModal(false);
+      setMessage("");
+    }
+  }, [scratchValue]);
 
   useEffect(() => {
     dispatch(getWinnersList());
@@ -123,7 +124,7 @@ useEffect(() => {
     // ❌ Prevent scratching when scratchValue is undefined or 0
     if (!scratchValue || scratchValue <= 0) {
       setMessage(
-        "You have 0 scratches left! To scratch more, text PLAY to 20444."
+        "You have 0 scratches left! To scratch more, text PLAY to 20444.",
       );
       setShowModal(true);
       return;
@@ -136,7 +137,7 @@ useEffect(() => {
     if (!isRevealed) {
       const updatedScratchValue = Math.max((scratchValue ?? 0) - 1, 0);
       dispatch(
-        updateUserScratchValue({ newScratchValue: updatedScratchValue })
+        updateUserScratchValue({ newScratchValue: updatedScratchValue }),
       );
     }
 
@@ -163,7 +164,7 @@ useEffect(() => {
         setShowConfetti(true);
 
         const winningPrizeData = prizeList.find(
-          (item: any) => item.prizeValue === winner.replace("₦", "")
+          (item: any) => item.prizeValue === winner.replace("₦", ""),
         );
 
         setMessage(`You have won ${winningPrizeData.prizeCategory} ${winner}!`);
@@ -175,8 +176,9 @@ useEffect(() => {
               prizeCategory: winningPrizeData.prizeCategory,
               winningDate: new Date().toISOString(),
               prizeValue: winningPrizeData.prizeValue,
-            })
+            }),
           );
+          dispatch(getGeneratedPrizeList({ prizeList, winningPrice }));
         }
       } else if (newRevealedPrizes.length === prizes.length && !gameEnded) {
         setMessage("Try again!");
@@ -229,7 +231,7 @@ useEffect(() => {
                               handleReveal(prize, index);
                             else {
                               setMessage(
-                                "You have 0 scratches left! To scratch more, text PLAY to 20444."
+                                "You have 0 scratches left! To scratch more, text PLAY to 20444.",
                               );
                               setShowModal(true);
                             }
@@ -268,13 +270,13 @@ useEffect(() => {
 
                     const updatedScratchValue = Math.max(
                       (scratchValue ?? 0) - boxesScratched,
-                      0
+                      0,
                     );
 
                     dispatch(
                       updateUserScratchValue({
                         newScratchValue: updatedScratchValue,
-                      })
+                      }),
                     );
                     // sessionStorage.setItem(
                     //   "scratchValue",
@@ -309,7 +311,7 @@ useEffect(() => {
 
                   if (typeof scratchValue === "number" && scratchValue === 0) {
                     setMessage(
-                      "You have 0 scratches left! To scratch more, text PLAY to 20444."
+                      "You have 0 scratches left! To scratch more, text PLAY to 20444.",
                     );
                     setShowModal(true);
                   }
