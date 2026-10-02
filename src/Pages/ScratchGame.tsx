@@ -204,7 +204,7 @@ const ScratchGame: React.FC = () => {
           >
             <div className="w-full md:w-4/5 rounded-[20px] py-4 scratch-bg max-md:px-4 relative">
               <p className="text-light font-bold text-center font-anaheim tracking-wide">
-                Match 3 identical prize amounts to win.
+                Scratch 3 identical prize amounts to win.
               </p>
               <p className="text-light font-bold text-center font-anaheim tracking-wide">
                 Number of Scratches: {scratchValue}

@@ -12,7 +12,7 @@ const Login: React.FC = () => {
   let { loading, error: netWorkError } = useAppSelector((state) => state.auth);
 
   // console.log({loading})
-  const [value, setValue] = useState<string>();
+  const [value, setValue] = useState("");
   // const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const allowedCountries: CustomCountryCode[] = ["NG"];
