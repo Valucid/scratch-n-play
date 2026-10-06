@@ -17,12 +17,16 @@ import Preloader from "../components/Preloader";
 const ScratchGame: React.FC = () => {
   const dispatch = useAppDispatch();
   const {
-    scratches: { data: scratchValue },
+    // scratches: { data: scratchValue },
     prize: { data: winningPrice, loading: prizeLoading },
     prizeList: { data: prizeList = [], loading: prizeListLoading },
     // winnersList: { data: winnersValue },
     generatedPrizes: { data: generatedPrizeList },
   } = useAppSelector((state) => state.scratches);
+
+  const { scratches: { data: scratchValue, loading: scratchLoading } } = useAppSelector(
+  (state) => state.scratches
+);
 
   const [prizes, setPrizes] = useState<string[]>([]);
   const [isRevealed, setIsRevealed] = useState(false);
@@ -59,7 +63,7 @@ const ScratchGame: React.FC = () => {
       prizeList?.length &&
       winningPrice
     ) {
-      console.log("am i being called????");
+      // console.log("am i being called????");
       const list = prizeList.map((item: any) => item.prizeValue);
       dispatch(getGeneratedPrizeList({ prizeList: list, winningPrice }));
 
@@ -73,18 +77,20 @@ const ScratchGame: React.FC = () => {
     // winnersValue?.isTwentywinners,
   ]);
 
-  useEffect(() => {
-    if (
-      scratchValue === 0 ||
-      scratchValue === undefined ||
-      scratchValue === null
-    ) {
-      setMessage(
-        "You have 0 scratches left! To scratch more, text PLAY to 20444."
-      );
-      setShowModal(true);
-    }
-  }, [scratchValue]);
+ const NO_SCRATCHES_MSG =
+  "You have 0 scratches left! To scratch more, text PLAY to 20444.";
+
+useEffect(() => {
+  if (scratchLoading || scratchValue === undefined || scratchValue === null) return;
+
+  if (scratchValue <= 0) {
+    setMessage(NO_SCRATCHES_MSG);
+    setShowModal(true);
+  } else if (message === NO_SCRATCHES_MSG) {
+    setShowModal(false);
+    setMessage("");
+  }
+}, [scratchValue, scratchLoading]);
 
   useEffect(() => {
     dispatch(getWinnersList());
